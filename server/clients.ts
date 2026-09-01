@@ -1,13 +1,18 @@
 "use server";
-import { revalidatePath } from "next/cache";
-
 import { db } from "@/db/drizzle";
-import { Client, NewClient, clients } from "@/db/schema";
+import { revalidatePath } from "next/cache";
+import { createClientSchema, clientUpdateSchema } from "@/db/validators";
+import { clients } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function getClients() {
-  const clientsList = await db.select().from(clients);
-  return clientsList;
+  try {
+    const clientsList = await db.select().from(clients);
+    return clientsList;
+  } catch (error) {
+    console.error("Error fetching clients:", error);
+    throw new Error("Failed to fetch clients");
+  }
 }
 
 export async function getClientById(clientId: string) {
@@ -23,9 +28,10 @@ export async function getClientById(clientId: string) {
   }
 }
 
-export async function createClient(client: NewClient) {
+export async function createClient(client: unknown) {
+  const data = createClientSchema.parse(client);
   try {
-    const newClient = await db.insert(clients).values(client).returning();
+    const newClient = await db.insert(clients).values(data).returning();
     revalidatePath("/clients");
     return newClient[0];
   } catch (error) {
@@ -34,14 +40,12 @@ export async function createClient(client: NewClient) {
   }
 }
 
-export async function updateClient(
-  clientId: string,
-  client: Partial<NewClient>,
-) {
+export async function updateClient(clientId: string, client: unknown) {
+  const data = clientUpdateSchema.parse(client);
   try {
     const updatedClient = await db
       .update(clients)
-      .set(client)
+      .set(data)
       .where(eq(clients.id, clientId))
       .returning();
     revalidatePath("/clients");

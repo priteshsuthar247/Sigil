@@ -1,8 +1,11 @@
 "use server";
-import { revalidatePath } from "next/cache";
-
 import { db } from "@/db/drizzle";
-import { invoiceItems, InvoiceItem, NewInvoiceItem } from "@/db/schema";
+import { revalidatePath } from "next/cache";
+import {
+  createInvoiceItemSchema,
+  invoiceItemUpdateSchema,
+} from "@/db/validators";
+import { invoiceItems } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function getInvoiceItems() {
@@ -28,13 +31,14 @@ export async function getInvoiceItemById(invoiceItemId: string) {
   }
 }
 
-export async function createInvoiceItem(invoiceItem: NewInvoiceItem) {
+export async function createInvoiceItem(invoiceItem: unknown) {
+  const data = createInvoiceItemSchema.parse(invoiceItem);
   try {
     const newInvoiceItem = await db
       .insert(invoiceItems)
-      .values(invoiceItem)
+      .values(data)
       .returning();
-    revalidatePath("/invoice-items");
+    revalidatePath("/invoices");
     return newInvoiceItem[0];
   } catch (error) {
     console.error("Error creating invoice item:", error);
@@ -44,15 +48,16 @@ export async function createInvoiceItem(invoiceItem: NewInvoiceItem) {
 
 export async function updateInvoiceItem(
   invoiceItemId: string,
-  invoiceItem: Partial<NewInvoiceItem>,
+  invoiceItem: unknown,
 ) {
+  const data = invoiceItemUpdateSchema.parse(invoiceItem);
   try {
     const updatedInvoiceItem = await db
       .update(invoiceItems)
-      .set(invoiceItem)
+      .set(data)
       .where(eq(invoiceItems.id, invoiceItemId))
       .returning();
-    revalidatePath("/invoice-items");
+    revalidatePath("/invoices");
     return updatedInvoiceItem[0];
   } catch (error) {
     console.error("Error updating invoice item:", error);
@@ -66,7 +71,7 @@ export async function deleteInvoiceItem(invoiceItemId: string) {
       .delete(invoiceItems)
       .where(eq(invoiceItems.id, invoiceItemId))
       .returning();
-    revalidatePath("/invoice-items");
+    revalidatePath("/invoices");
     return deletedInvoiceItem[0];
   } catch (error) {
     console.error("Error deleting invoice item:", error);
