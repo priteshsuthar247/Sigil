@@ -48,3 +48,10 @@ export const invoiceItems = pgTable("invoice_items", {
   price: integer("price").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export type Client = typeof clients.$inferSelect;
+export type NewClient = typeof clients.$inferInsert;
+export type Invoice = typeof invoices.$inferSelect;
+export type NewInvoice = typeof invoices.$inferInsert;
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type NewInvoiceItem = typeof invoiceItems.$inferInsert;
