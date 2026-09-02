@@ -3,6 +3,10 @@ import { test, expect } from "@playwright/test";
 test.describe("Client list", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/dashboard/clients");
+    // Show all rows to handle accumulated test data
+    const rowsPerPage = page.getByRole("combobox", { name: "Rows per page" });
+    await rowsPerPage.click();
+    await page.getByRole("option", { name: "50" }).click();
   });
 
   test("displays seeded clients in table", async ({ page }) => {
@@ -25,6 +29,10 @@ test.describe("Client detail", () => {
   test("shows correct client data from database", async ({ page }) => {
     // Navigate to clients list and click Acme Corp
     await page.goto("/dashboard/clients");
+    // Show all rows to handle accumulated test data
+    const rowsPerPage = page.getByRole("combobox", { name: "Rows per page" });
+    await rowsPerPage.click();
+    await page.getByRole("option", { name: "50" }).click();
     await page.getByText("Acme Corp").first().click();
     await page.waitForURL(/\/dashboard\/clients\//);
 
@@ -37,6 +45,10 @@ test.describe("Client detail", () => {
   test("shows client's invoices", async ({ page }) => {
     // Acme Corp has invoices #1001 and #1007
     await page.goto("/dashboard/clients");
+    // Show all rows to handle accumulated test data
+    const rowsPerPage = page.getByRole("combobox", { name: "Rows per page" });
+    await rowsPerPage.click();
+    await page.getByRole("option", { name: "50" }).click();
     await page.getByText("Acme Corp").first().click();
     await page.waitForURL(/\/dashboard\/clients\//);
 
@@ -47,6 +59,10 @@ test.describe("Client detail", () => {
 
   test("invoice link from client detail goes to invoice detail", async ({ page }) => {
     await page.goto("/dashboard/clients");
+    // Show all rows to handle accumulated test data
+    const rowsPerPage = page.getByRole("combobox", { name: "Rows per page" });
+    await rowsPerPage.click();
+    await page.getByRole("option", { name: "50" }).click();
     await page.getByText("Acme Corp").first().click();
     await page.waitForURL(/\/dashboard\/clients\//);
 
