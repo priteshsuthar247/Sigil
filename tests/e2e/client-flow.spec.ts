@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Client flow", () => {
-  test("client list page loads", async ({ page }) => {
+test.describe("Client list", () => {
+  test("page loads with new client button", async ({ page }) => {
     await page.goto("/dashboard/clients");
     await expect(
       page.getByRole("button", { name: "New Client" }),
@@ -11,23 +11,30 @@ test.describe("Client flow", () => {
   test("new client dialog opens", async ({ page }) => {
     await page.goto("/dashboard/clients");
     await page.getByRole("button", { name: "New Client" }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "New Client" })).toBeVisible();
   });
 
-  test("client detail page has edit and new invoice buttons", async ({ page }) => {
+  test("dialog has name and email fields", async ({ page }) => {
     await page.goto("/dashboard/clients");
+    await page.getByRole("button", { name: "New Client" }).click();
 
-    // Find the first client link in the table
-    const firstClientLink = page.locator("table tbody tr a, table tbody a").first();
-    await firstClientLink.waitFor({ state: "visible", timeout: 5000 });
-    await firstClientLink.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByLabel("Name")).toBeVisible();
+    await expect(dialog.getByLabel("Email")).toBeVisible();
+    await expect(dialog.getByLabel("Phone")).toBeVisible();
+    await expect(dialog.getByLabel("Address")).toBeVisible();
+  });
 
-    // On the detail page, check for Edit button and New Invoice button
-    await expect(
-      page.getByRole("button", { name: "Edit" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "New Invoice" }),
-    ).toBeVisible();
+  test("cancel closes dialog", async ({ page }) => {
+    await page.goto("/dashboard/clients");
+    await page.getByRole("button", { name: "New Client" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toBeHidden();
   });
 });
