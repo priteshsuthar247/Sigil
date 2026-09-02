@@ -169,7 +169,7 @@ function InvoiceFormBody({
                 setClientId(v as string);
                 setError(null);
               }}
-              items={clients}
+              items={clients.map((c) => ({ value: c.id, label: c.name }))}
             >
               <ComboboxInput
                 placeholder="Select a client"
@@ -178,9 +178,9 @@ function InvoiceFormBody({
               />
               <ComboboxContent>
                 <ComboboxList>
-                  {(client: Client) => (
-                    <ComboboxItem key={client.id} value={client.id}>
-                      {client.name}
+                  {(item: { value: string; label: string }) => (
+                    <ComboboxItem key={item.value} value={item.value}>
+                      {item.label}
                     </ComboboxItem>
                   )}
                 </ComboboxList>
