@@ -1,0 +1,47 @@
+[
+  {
+    "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "number": 1001,
+    "client": "Acme Co.",
+    "status": "paid",
+    "total": "$1,250.00",
+    "createdAt": "Aug 12, 2026",
+    "paidAt": "Aug 20, 2026"
+  },
+  {
+    "id": "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
+    "number": 1002,
+    "client": "Globex Corporation",
+    "status": "sent",
+    "total": "$890.00",
+    "createdAt": "Aug 25, 2026",
+    "paidAt": "—"
+  },
+  {
+    "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+    "number": 1003,
+    "client": "Initech",
+    "status": "paid",
+    "total": "$3,420.50",
+    "createdAt": "Aug 02, 2026",
+    "paidAt": "Aug 15, 2026"
+  },
+  {
+    "id": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+    "number": 1004,
+    "client": "Umbrella Corp",
+    "status": "sent",
+    "total": "$2,175.00",
+    "createdAt": "Aug 28, 2026",
+    "paidAt": "—"
+  },
+  {
+    "id": "6ba7b812-9dad-11d1-80b4-00c04fd430c8",
+    "number": 1005,
+    "client": "Stark Industries",
+    "status": "paid",
+    "total": "$5,600.00",
+    "createdAt": "Jul 30, 2026",
+    "paidAt": "Aug 09, 2026"
+  }
+]
