@@ -8,64 +8,70 @@ import { eq } from "drizzle-orm";
 export async function getClients() {
   try {
     const clientsList = await db.select().from(clients);
-    return clientsList;
+    return { data: clientsList };
   } catch (error) {
     console.error("Error fetching clients:", error);
-    throw new Error("Failed to fetch clients");
+    return { error: "Failed to fetch clients" };
   }
 }
 
 export async function getClientById(clientId: string) {
   try {
-    const client = await db
+    const [client] = await db
       .select()
       .from(clients)
-      .where(eq(clients.id, clientId));
-    return client;
+      .where(eq(clients.id, clientId))
+      .limit(1);
+    return { data: client ?? null };
   } catch (error) {
     console.error("Error fetching client by ID:", error);
-    throw new Error("Failed to fetch client by ID");
+    return { error: "Failed to fetch client by ID" };
   }
 }
 
 export async function createClient(client: unknown) {
-  const data = createClientSchema.parse(client);
+  const result = createClientSchema.safeParse(client);
+  if (!result.success) return { error: result.error.flatten() };
   try {
-    const newClient = await db.insert(clients).values(data).returning();
+    const [newClient] = await db
+      .insert(clients)
+      .values(result.data)
+      .returning();
     revalidatePath("/clients");
-    return newClient[0];
+    return { data: newClient };
   } catch (error) {
     console.error("Error creating client:", error);
-    throw new Error("Failed to create client");
+    return { error: "Failed to create client" };
   }
 }
 
 export async function updateClient(clientId: string, client: unknown) {
-  const data = clientUpdateSchema.parse(client);
+  const result = clientUpdateSchema.safeParse(client);
+  if (!result.success) return { error: result.error.flatten() };
   try {
-    const updatedClient = await db
+    const [updatedClient] = await db
       .update(clients)
-      .set(data)
+      .set(result.data)
       .where(eq(clients.id, clientId))
       .returning();
     revalidatePath("/clients");
-    return updatedClient[0];
+    return { data: updatedClient ?? null };
   } catch (error) {
     console.error("Error updating client:", error);
-    throw new Error("Failed to update client");
+    return { error: "Failed to update client" };
   }
 }
 
 export async function deleteClient(clientId: string) {
   try {
-    const deletedClient = await db
+    const [deletedClient] = await db
       .delete(clients)
       .where(eq(clients.id, clientId))
       .returning();
     revalidatePath("/clients");
-    return deletedClient[0];
+    return { data: deletedClient ?? null };
   } catch (error) {
     console.error("Error deleting client:", error);
-    throw new Error("Failed to delete client");
+    return { error: "Failed to delete client" };
   }
 }

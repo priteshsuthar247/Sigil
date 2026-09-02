@@ -28,6 +28,7 @@ export const clients = pgTable("clients", {
 
 export const invoices = pgTable("invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
+  number: integer("number").notNull(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -36,6 +37,7 @@ export const invoices = pgTable("invoices", {
     .references(() => clients.id, { onDelete: "cascade" }),
   status: invoiceStatus("status").default("sent").notNull(),
   totalAmount: integer("total_amount").notNull(),
+  paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
