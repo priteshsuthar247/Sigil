@@ -37,7 +37,7 @@ export async function createClient(client: unknown) {
       .insert(clients)
       .values(result.data)
       .returning();
-    revalidatePath("/clients");
+    revalidatePath("/dashboard/clients");
     return { data: newClient };
   } catch (error) {
     console.error("Error creating client:", error);
@@ -54,7 +54,7 @@ export async function updateClient(clientId: string, client: unknown) {
       .set(result.data)
       .where(eq(clients.id, clientId))
       .returning();
-    revalidatePath("/clients");
+    revalidatePath("/dashboard/clients");
     return { data: updatedClient ?? null };
   } catch (error) {
     console.error("Error updating client:", error);
@@ -68,7 +68,7 @@ export async function deleteClient(clientId: string) {
       .delete(clients)
       .where(eq(clients.id, clientId))
       .returning();
-    revalidatePath("/clients");
+    revalidatePath("/dashboard/clients");
     return { data: deletedClient ?? null };
   } catch (error) {
     console.error("Error deleting client:", error);

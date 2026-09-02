@@ -16,7 +16,7 @@ export const createClientSchema = clientInsertSchema
 export const clientUpdateSchema = createClientSchema.partial();
 
 export const createInvoiceWithItemsSchema = z.object({
-  userId: z.string().uuid("Invalid user ID"),
+  userId: z.string().uuid("Invalid user ID").optional(),
   clientId: z.string().uuid("Invalid client ID"),
   status: z.enum(invoiceStatus.enumValues).default("sent"),
   items: z
@@ -58,3 +58,14 @@ export const updateInvoiceWithItemsSchema = z.object({
 export type UpdateInvoiceWithItemsInput = z.infer<
   typeof updateInvoiceWithItemsSchema
 >;
+
+const invoiceItemInsertSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  quantity: z.number().int().min(1, "Quantity must be at least 1"),
+  price: z
+    .number()
+    .int()
+    .nonnegative("Price must be a non-negative integer"),
+});
+
+export { invoiceItemInsertSchema as invoiceItemFormSchema };

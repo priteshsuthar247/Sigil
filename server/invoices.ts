@@ -5,12 +5,24 @@ import {
   createInvoiceWithItemsSchema,
   updateInvoiceWithItemsSchema,
 } from "@/db/validators";
-import { invoices, invoiceItems, invoiceStatus } from "@/db/schema";
+import { invoices, invoiceItems, clients, invoiceStatus } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 export async function getInvoices() {
   try {
-    const invoicesList = await db.select().from(invoices);
+    const invoicesList = await db
+      .select({
+        id: invoices.id,
+        number: invoices.number,
+        clientId: invoices.clientId,
+        clientName: clients.name,
+        status: invoices.status,
+        totalAmount: invoices.totalAmount,
+        paidAt: invoices.paidAt,
+        createdAt: invoices.createdAt,
+      })
+      .from(invoices)
+      .innerJoin(clients, eq(invoices.clientId, clients.id));
     return { data: invoicesList };
   } catch (error) {
     console.error("Error fetching invoices:", error);
@@ -21,8 +33,18 @@ export async function getInvoices() {
 export async function getInvoiceById(invoiceId: string) {
   try {
     const [invoice] = await db
-      .select()
+      .select({
+        id: invoices.id,
+        number: invoices.number,
+        clientId: invoices.clientId,
+        clientName: clients.name,
+        status: invoices.status,
+        totalAmount: invoices.totalAmount,
+        paidAt: invoices.paidAt,
+        createdAt: invoices.createdAt,
+      })
       .from(invoices)
+      .innerJoin(clients, eq(invoices.clientId, clients.id))
       .where(eq(invoices.id, invoiceId))
       .limit(1);
     return { data: invoice ?? null };
@@ -38,7 +60,7 @@ export async function deleteInvoice(invoiceId: string) {
       .delete(invoices)
       .where(eq(invoices.id, invoiceId))
       .returning();
-    revalidatePath("/invoices");
+    revalidatePath("/dashboard/invoices");
     return { data: deletedInvoice ?? null };
   } catch (error) {
     console.error("Error deleting invoice:", error);
@@ -50,6 +72,7 @@ export async function createInvoiceWithItems(input: unknown) {
   const result = createInvoiceWithItemsSchema.safeParse(input);
   if (!result.success) return { error: result.error.flatten() };
   const data = result.data;
+  const userId = data.userId ?? "00000000-0000-0000-0000-000000000000";
 
   try {
     const txResult = await db.transaction(async (tx) => {
@@ -61,7 +84,7 @@ export async function createInvoiceWithItems(input: unknown) {
       const [lastInvoice] = await tx
         .select({ number: invoices.number })
         .from(invoices)
-        .where(eq(invoices.userId, data.userId))
+        .where(eq(invoices.userId, userId))
         .orderBy(desc(invoices.number))
         .limit(1);
       const nextNumber = (lastInvoice?.number ?? 0) + 1;
@@ -70,7 +93,7 @@ export async function createInvoiceWithItems(input: unknown) {
         .insert(invoices)
         .values({
           number: nextNumber,
-          userId: data.userId,
+          userId,
           clientId: data.clientId,
           status: data.status,
           totalAmount: total,
@@ -89,7 +112,7 @@ export async function createInvoiceWithItems(input: unknown) {
       return { data: { invoice } };
     });
 
-    revalidatePath("/invoices");
+    revalidatePath("/dashboard/invoices");
     return txResult;
   } catch (error) {
     console.error("Error creating invoice with items:", error);

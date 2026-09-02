@@ -7,6 +7,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Design system audit",
     quantity: 1,
     price: 75000,
+    createdAt: new Date("2026-08-12"),
   },
   {
     id: "i2",
@@ -14,6 +15,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Component refactor",
     quantity: 1,
     price: 50000,
+    createdAt: new Date("2026-08-12"),
   },
   {
     id: "i3",
@@ -21,6 +23,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "API integration sprint",
     quantity: 4,
     price: 18000,
+    createdAt: new Date("2026-08-25"),
   },
   {
     id: "i4",
@@ -28,6 +31,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Project management",
     quantity: 2,
     price: 13000,
+    createdAt: new Date("2026-08-25"),
   },
   {
     id: "i5",
@@ -35,6 +39,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Q3 retainer",
     quantity: 1,
     price: 342050,
+    createdAt: new Date("2026-08-02"),
   },
   {
     id: "i6",
@@ -42,6 +47,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Frontend build (week 1)",
     quantity: 1,
     price: 125000,
+    createdAt: new Date("2026-08-28"),
   },
   {
     id: "i7",
@@ -49,6 +55,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Design tokens package",
     quantity: 1,
     price: 92500,
+    createdAt: new Date("2026-08-28"),
   },
   {
     id: "i8",
@@ -56,6 +63,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Enterprise platform — milestone 1",
     quantity: 1,
     price: 560000,
+    createdAt: new Date("2026-07-30"),
   },
   {
     id: "i9",
@@ -63,6 +71,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Maintenance retainer (Aug)",
     quantity: 1,
     price: 64000,
+    createdAt: new Date("2026-09-01"),
   },
   {
     id: "i10",
@@ -70,6 +79,7 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Security review",
     quantity: 1,
     price: 145000,
+    createdAt: new Date("2026-09-04"),
   },
   {
     id: "i11",
@@ -77,5 +87,6 @@ export const invoiceItems: InvoiceItem[] = [
     description: "Onboarding workshop",
     quantity: 2,
     price: 95000,
+    createdAt: new Date("2026-09-08"),
   },
 ];

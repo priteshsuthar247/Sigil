@@ -1,54 +1,40 @@
 import { z } from "zod";
+import { invoiceStatus } from "@/db/schema";
 
-export const invoiceItemSchema = z.object({
-  id: z.string(),
-  invoiceId: z.string(),
-  description: z.string(),
-  quantity: z.number().int().min(1),
-  price: z.number().int().nonnegative(),
-});
-export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
+// ── Display types ──────────────────────────────────────────────
+// Re-export DB types. Invoice is extended with clientName (from JOIN).
+export type { Client, InvoiceItem } from "@/db/schema";
+export type InvoiceStatus = (typeof invoiceStatus.enumValues)[number];
 
-export const invoiceStatusSchema = z.enum(["sent", "paid"]);
-export type InvoiceStatus = z.infer<typeof invoiceStatusSchema>;
+export type Invoice = {
+  id: string;
+  number: number;
+  clientId: string;
+  clientName: string;
+  status: InvoiceStatus;
+  totalAmount: number;
+  paidAt: Date | null;
+  createdAt: Date;
+};
 
-export const invoiceSchema = z.object({
-  id: z.string(),
-  number: z.number().int(),
-  clientId: z.string(),
-  clientName: z.string(),
-  status: invoiceStatusSchema,
-  totalAmount: z.number().int().nonnegative(),
-  createdAt: z.date(),
-  paidAt: z.date().nullable(),
-});
-export type Invoice = z.infer<typeof invoiceSchema>;
+// ── Form schemas (reuse drizzle-zod validators) ────────────────
+import { createClientSchema } from "@/db/validators";
+import { invoiceItemFormSchema } from "@/db/validators";
 
-export const clientSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string().email(),
-  phone: z.string().nullable(),
-  address: z.string().nullable(),
-  createdAt: z.date(),
-});
-export type Client = z.infer<typeof clientSchema>;
-
-export const clientFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(7, "Phone must be at least 7 characters").max(20).optional().or(z.literal("")),
-  address: z.string().max(500).optional().or(z.literal("")),
+export const clientFormSchema = createClientSchema.extend({
+  phone: createClientSchema.shape.phone
+    .or(z.literal(""))
+    .transform((v) => (v === "" ? undefined : v)),
+  address: createClientSchema.shape.address
+    .or(z.literal(""))
+    .transform((v) => (v === "" ? undefined : v)),
 });
 export type ClientFormValues = z.infer<typeof clientFormSchema>;
 
-export const invoiceItemFormSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  quantity: z.number().int().min(1, "Quantity must be at least 1"),
-  price: z.number().int().nonnegative("Price must be a non-negative integer"),
-});
+export { invoiceItemFormSchema };
 export type InvoiceItemFormValues = z.infer<typeof invoiceItemFormSchema>;
 
+// ── Utilities ──────────────────────────────────────────────────
 export function formatCurrency(amount: number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
