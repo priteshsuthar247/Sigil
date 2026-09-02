@@ -5,7 +5,7 @@ import {
   createInvoiceWithItemsSchema,
   updateInvoiceWithItemsSchema,
 } from "@/db/validators";
-import { invoices, invoiceItems, clients, invoiceStatus } from "@/db/schema";
+import { invoices, invoiceItems, clients, invoiceStatus, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 export async function getInvoices() {
@@ -72,48 +72,50 @@ export async function createInvoiceWithItems(input: unknown) {
   const result = createInvoiceWithItemsSchema.safeParse(input);
   if (!result.success) return { error: result.error.flatten() };
   const data = result.data;
-  const userId = data.userId ?? "00000000-0000-0000-0000-000000000000";
+
+  let userId = data.userId;
+  if (!userId) {
+    const [firstUser] = await db.select({ id: users.id }).from(users).limit(1);
+    userId = firstUser?.id;
+  }
+  if (!userId) return { error: "No user found. Please create a user first." };
 
   try {
-    const txResult = await db.transaction(async (tx) => {
-      const total = data.items.reduce(
-        (sum, i) => sum + i.quantity * i.price,
-        0,
-      );
+    const total = data.items.reduce(
+      (sum, i) => sum + i.quantity * i.price,
+      0,
+    );
 
-      const [lastInvoice] = await tx
-        .select({ number: invoices.number })
-        .from(invoices)
-        .where(eq(invoices.userId, userId))
-        .orderBy(desc(invoices.number))
-        .limit(1);
-      const nextNumber = (lastInvoice?.number ?? 0) + 1;
+    const [lastInvoice] = await db
+      .select({ number: invoices.number })
+      .from(invoices)
+      .where(eq(invoices.userId, userId))
+      .orderBy(desc(invoices.number))
+      .limit(1);
+    const nextNumber = (lastInvoice?.number ?? 0) + 1;
 
-      const [invoice] = await tx
-        .insert(invoices)
-        .values({
-          number: nextNumber,
-          userId,
-          clientId: data.clientId,
-          status: data.status,
-          totalAmount: total,
-        })
-        .returning();
+    const [invoice] = await db
+      .insert(invoices)
+      .values({
+        number: nextNumber,
+        userId,
+        clientId: data.clientId,
+        status: data.status,
+        totalAmount: total,
+      })
+      .returning();
 
-      await tx.insert(invoiceItems).values(
-        data.items.map((item) => ({
-          invoiceId: invoice.id,
-          description: item.description,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-      );
-
-      return { data: { invoice } };
-    });
+    await db.insert(invoiceItems).values(
+      data.items.map((item) => ({
+        invoiceId: invoice.id,
+        description: item.description,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+    );
 
     revalidatePath("/dashboard/invoices");
-    return txResult;
+    return { data: { invoice } };
   } catch (error) {
     console.error("Error creating invoice with items:", error);
     return { error: "Failed to create invoice with items" };
@@ -129,72 +131,67 @@ export async function updateInvoiceWithItems(
   const data = result.data;
 
   try {
-    const txResult = await db.transaction(async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(invoices)
+    const [existing] = await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.id, invoiceId))
+      .limit(1);
+
+    if (!existing) return { error: `Invoice ${invoiceId} not found` };
+    if (existing.status === "paid") {
+      return { error: "Cannot edit a paid invoice" };
+    }
+
+    const invoicePatch: {
+      clientId?: string;
+      status?: (typeof invoiceStatus.enumValues)[number];
+      paidAt?: Date | null;
+    } = {};
+    if (data.clientId !== undefined) invoicePatch.clientId = data.clientId;
+    if (data.status !== undefined) {
+      invoicePatch.status = data.status;
+      invoicePatch.paidAt = data.status === "paid" ? new Date() : null;
+    }
+
+    let workingInvoice = existing;
+    if (Object.keys(invoicePatch).length > 0) {
+      const [updated] = await db
+        .update(invoices)
+        .set(invoicePatch)
         .where(eq(invoices.id, invoiceId))
-        .limit(1);
+        .returning();
+      workingInvoice = updated;
+    }
 
-      if (!existing) return { error: `Invoice ${invoiceId} not found` };
-      if (existing.status === "paid") {
-        return { error: "Cannot edit a paid invoice" };
-      }
+    if (data.items !== undefined) {
+      await db
+        .delete(invoiceItems)
+        .where(eq(invoiceItems.invoiceId, invoiceId));
 
-      const invoicePatch: {
-        clientId?: string;
-        status?: (typeof invoiceStatus.enumValues)[number];
-        paidAt?: Date | null;
-      } = {};
-      if (data.clientId !== undefined) invoicePatch.clientId = data.clientId;
-      if (data.status !== undefined) {
-        invoicePatch.status = data.status;
+      await db.insert(invoiceItems).values(
+        data.items.map((item) => ({
+          invoiceId,
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      );
 
-        invoicePatch.paidAt = data.status === "paid" ? new Date() : null;
-      }
+      const total = data.items.reduce(
+        (sum, i) => sum + i.quantity * i.price,
+        0,
+      );
 
-      let workingInvoice = existing;
-      if (Object.keys(invoicePatch).length > 0) {
-        const [updated] = await tx
-          .update(invoices)
-          .set(invoicePatch)
-          .where(eq(invoices.id, invoiceId))
-          .returning();
-        workingInvoice = updated;
-      }
+      const [finalInvoice] = await db
+        .update(invoices)
+        .set({ totalAmount: total })
+        .where(eq(invoices.id, invoiceId))
+        .returning();
+      workingInvoice = finalInvoice;
+    }
 
-      if (data.items !== undefined) {
-        await tx
-          .delete(invoiceItems)
-          .where(eq(invoiceItems.invoiceId, invoiceId));
-
-        await tx.insert(invoiceItems).values(
-          data.items.map((item) => ({
-            invoiceId,
-            description: item.description,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        );
-
-        const total = data.items.reduce(
-          (sum, i) => sum + i.quantity * i.price,
-          0,
-        );
-
-        const [finalInvoice] = await tx
-          .update(invoices)
-          .set({ totalAmount: total })
-          .where(eq(invoices.id, invoiceId))
-          .returning();
-        workingInvoice = finalInvoice;
-      }
-
-      return { data: { invoice: workingInvoice } };
-    });
-
-    if ("data" in txResult) revalidatePath("/dashboard/invoices");
-    return txResult;
+    revalidatePath("/dashboard/invoices");
+    return { data: { invoice: workingInvoice } };
   } catch (error) {
     console.error("Error updating invoice with items:", error);
     return { error: "Failed to update invoice with items" };

@@ -38,6 +38,7 @@ import {
   makeInitialItemRows,
   type InvoiceItemRow,
 } from "@/components/invoice/invoice-items-editor";
+import { createInvoiceWithItems } from "@/server/invoices";
 import type { Client, Invoice, InvoiceStatus } from "@/lib/schemas";
 
 export function InvoiceFormDialog({
@@ -81,6 +82,8 @@ function InvoiceFormBody({
   onClose: () => void;
 }) {
   const isEdit = Boolean(invoice);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const [clientId, setClientId] = React.useState<string>(
     invoice?.clientId ?? defaultClientId ?? "",
@@ -100,8 +103,41 @@ function InvoiceFormBody({
     makeInitialItemRows(),
   );
 
-  const handleSave = () => {
-    onClose();
+  const handleSave = async () => {
+    if (!clientId) {
+      setError("Please select a client");
+      return;
+    }
+
+    const validItems = items.filter((row) => row.description.trim() !== "");
+    if (validItems.length === 0) {
+      setError("At least one item with a description is required");
+      return;
+    }
+
+    setError(null);
+    setSaving(true);
+    try {
+      const res = await createInvoiceWithItems({
+        clientId,
+        status,
+        items: validItems.map((row) => ({
+          description: row.description,
+          quantity: row.quantity,
+          price: row.price,
+        })),
+      });
+
+      if (res.error) {
+        setError("Failed to create invoice");
+        return;
+      }
+      onClose();
+    } catch {
+      setError("Failed to create invoice");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -129,7 +165,10 @@ function InvoiceFormBody({
             <FieldLabel>Client</FieldLabel>
             <Combobox
               value={clientId}
-              onValueChange={(v) => setClientId(v as string)}
+              onValueChange={(v) => {
+                setClientId(v as string);
+                setError(null);
+              }}
               items={clients}
             >
               <ComboboxInput
@@ -197,13 +236,17 @@ function InvoiceFormBody({
           </div>
 
           <InvoiceItemsEditor value={items} onChange={setItems} />
+
+          {error ? (
+            <p className="text-sm text-destructive">{error}</p>
+          ) : null}
         </FieldGroup>
       </form>
 
       <DialogFooter>
         <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-        <Button onClick={handleSave}>
-          {isEdit ? "Save changes" : "Create"}
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Creating..." : isEdit ? "Save changes" : "Create"}
         </Button>
       </DialogFooter>
     </>

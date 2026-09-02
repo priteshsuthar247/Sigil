@@ -13,7 +13,6 @@ vi.mock("@/db/drizzle", () => ({
     insert: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-    transaction: vi.fn(),
   },
 }));
 
@@ -24,11 +23,9 @@ vi.mock("next/cache", () => ({
 import { db } from "@/db/drizzle";
 import { revalidatePath } from "next/cache";
 
-function createTx(results?: unknown[]) {
-  let callIndex = 0;
-  const queue = results ?? [undefined];
-
-  const methods = [
+function createChain(result: unknown) {
+  const chain: Record<string, unknown> = {};
+  for (const m of [
     "select",
     "from",
     "where",
@@ -41,23 +38,12 @@ function createTx(results?: unknown[]) {
     "delete",
     "insert",
     "update",
-  ];
-
-  function makeChain(): Record<string, unknown> {
-    const tx: Record<string, unknown> = {};
-    for (const m of methods) {
-      tx[m] = vi.fn().mockReturnValue(tx);
-    }
-    tx.then = (resolve: (v: unknown) => void, reject?: (e: unknown) => void) => {
-      const raw = queue[callIndex] !== undefined ? queue[callIndex] : undefined;
-      const resolved = Array.isArray(raw) ? raw : [raw];
-      callIndex++;
-      return Promise.resolve(resolved).then(resolve, reject);
-    };
-    return tx;
+  ]) {
+    chain[m] = vi.fn().mockReturnValue(chain);
   }
-
-  return makeChain();
+  chain.then = (resolve: (v: unknown) => void, reject?: (e: unknown) => void) =>
+    Promise.resolve(Array.isArray(result) ? result : [result]).then(resolve, reject);
+  return chain;
 }
 
 beforeEach(() => {
@@ -69,8 +55,7 @@ describe("getInvoices", () => {
     const invoicesList = [
       { id: "1", number: 1001, clientName: "Acme", status: "paid" },
     ];
-    const chain = createTx([invoicesList]);
-    (db.select as ReturnType<typeof vi.fn>).mockReturnValue(chain);
+    (db.select as ReturnType<typeof vi.fn>).mockReturnValue(createChain(invoicesList));
 
     const result = await getInvoices();
     expect(result).toEqual({ data: invoicesList });
@@ -89,16 +74,14 @@ describe("getInvoices", () => {
 describe("getInvoiceById", () => {
   it("returns invoice when found", async () => {
     const invoice = { id: "1", number: 1001, clientName: "Acme" };
-    const chain = createTx([[invoice]]);
-    (db.select as ReturnType<typeof vi.fn>).mockReturnValue(chain);
+    (db.select as ReturnType<typeof vi.fn>).mockReturnValue(createChain([invoice]));
 
     const result = await getInvoiceById("1");
     expect(result).toEqual({ data: invoice });
   });
 
   it("returns null when not found", async () => {
-    const chain = createTx([[]]);
-    (db.select as ReturnType<typeof vi.fn>).mockReturnValue(chain);
+    (db.select as ReturnType<typeof vi.fn>).mockReturnValue(createChain([]));
 
     const result = await getInvoiceById("nonexistent");
     expect(result).toEqual({ data: null });
@@ -108,8 +91,7 @@ describe("getInvoiceById", () => {
 describe("deleteInvoice", () => {
   it("deletes an invoice and revalidates", async () => {
     const deleted = { id: "1", number: 1001 };
-    const chain = createTx([[deleted]]);
-    (db.delete as ReturnType<typeof vi.fn>).mockReturnValue(chain);
+    (db.delete as ReturnType<typeof vi.fn>).mockReturnValue(createChain([deleted]));
 
     const result = await deleteInvoice("1");
     expect(result).toEqual({ data: deleted });
@@ -117,8 +99,7 @@ describe("deleteInvoice", () => {
   });
 
   it("returns null when invoice not found", async () => {
-    const chain = createTx([[]]);
-    (db.delete as ReturnType<typeof vi.fn>).mockReturnValue(chain);
+    (db.delete as ReturnType<typeof vi.fn>).mockReturnValue(createChain([]));
 
     const result = await deleteInvoice("nonexistent");
     expect(result).toEqual({ data: null });
@@ -127,12 +108,13 @@ describe("deleteInvoice", () => {
 
 describe("createInvoiceWithItems", () => {
   it("creates invoice with computed total", async () => {
-    const lastInvoice = [{ number: 0 }];
-    const insertedInvoice = [{ id: "inv-1", number: 1, totalAmount: 2000 }];
-    const tx = createTx([lastInvoice, insertedInvoice, undefined]);
-    (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(
-      async (fn: (tx: ReturnType<typeof createTx>) => Promise<unknown>) => fn(tx),
-    );
+    // Mock sequential calls: userId lookup, last invoice number, insert invoice, insert items
+    (db.select as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([{ id: "user-1" }]))       // userId lookup
+      .mockReturnValueOnce(createChain([{ number: 0 }]));          // last invoice number
+    (db.insert as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([{ id: "inv-1", number: 1, totalAmount: 2000 }])) // insert invoice
+      .mockReturnValueOnce(createChain([undefined]));               // insert items
 
     const result = await createInvoiceWithItems({
       clientId: "550e8400-e29b-41d4-a716-446655440000",
@@ -162,12 +144,12 @@ describe("createInvoiceWithItems", () => {
   });
 
   it("auto-increments invoice number", async () => {
-    const lastInvoice = [{ number: 1005 }];
-    const insertedInvoice = [{ id: "inv-1", number: 1006 }];
-    const tx = createTx([lastInvoice, insertedInvoice, undefined]);
-    (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(
-      async (fn: (tx: ReturnType<typeof createTx>) => Promise<unknown>) => fn(tx),
-    );
+    (db.select as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([{ id: "user-1" }]))
+      .mockReturnValueOnce(createChain([{ number: 1005 }]));
+    (db.insert as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([{ id: "inv-1", number: 1006 }]))
+      .mockReturnValueOnce(createChain([undefined]));
 
     const result = await createInvoiceWithItems({
       clientId: "550e8400-e29b-41d4-a716-446655440000",
@@ -180,11 +162,8 @@ describe("createInvoiceWithItems", () => {
 
 describe("updateInvoiceWithItems", () => {
   it("blocks edits to paid invoices", async () => {
-    const existing = [{ id: "inv-1", status: "paid" }];
-    const tx = createTx([existing]);
-    (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(
-      async (fn: (tx: ReturnType<typeof createTx>) => Promise<unknown>) => fn(tx),
-    );
+    (db.select as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([{ id: "inv-1", status: "paid" }]));
 
     const result = await updateInvoiceWithItems("inv-1", {
       status: "sent",
@@ -196,10 +175,8 @@ describe("updateInvoiceWithItems", () => {
   });
 
   it("returns error for nonexistent invoice", async () => {
-    const tx = createTx([[]]);
-    (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(
-      async (fn: (tx: ReturnType<typeof createTx>) => Promise<unknown>) => fn(tx),
-    );
+    (db.select as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([]));
 
     const result = await updateInvoiceWithItems("nonexistent", {
       status: "sent",
@@ -211,24 +188,21 @@ describe("updateInvoiceWithItems", () => {
   });
 
   it("sets paidAt when status changes to paid", async () => {
-    const existing = [{
-      id: "inv-1",
-      status: "sent",
-      clientId: "c1",
-      totalAmount: 1000,
-    }];
-    const updated = [{
-      id: "inv-1",
-      status: "paid",
-      clientId: "c1",
-      totalAmount: 1000,
-      paidAt: new Date(),
-    }];
-
-    const tx = createTx([existing, updated]);
-    (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(
-      async (fn: (tx: ReturnType<typeof createTx>) => Promise<unknown>) => fn(tx),
-    );
+    (db.select as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([{
+        id: "inv-1",
+        status: "sent",
+        clientId: "c1",
+        totalAmount: 1000,
+      }]));
+    (db.update as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(createChain([{
+        id: "inv-1",
+        status: "paid",
+        clientId: "c1",
+        totalAmount: 1000,
+        paidAt: new Date(),
+      }]));
 
     const result = await updateInvoiceWithItems("inv-1", {
       status: "paid",

@@ -20,6 +20,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { clientFormSchema, type Client, type ClientFormValues } from "@/lib/schemas";
+import { createClient, updateClient } from "@/server/clients";
 
 export function ClientFormDialog({
   open,
@@ -52,6 +53,8 @@ function ClientFormBody({
   onClose: () => void;
 }) {
   const isEdit = Boolean(client);
+  const [saving, setSaving] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
 
   const [values, setValues] = React.useState<ClientFormValues>({
     name: client?.name ?? "",
@@ -71,7 +74,7 @@ function ClientFormBody({
     setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const result = clientFormSchema.safeParse(values);
     if (!result.success) {
       const flat = result.error.flatten().fieldErrors;
@@ -83,7 +86,32 @@ function ClientFormBody({
       });
       return;
     }
-    onClose();
+
+    setSaving(true);
+    setSubmitError(null);
+    try {
+      const res = isEdit
+        ? await updateClient(client!.id, result.data)
+        : await createClient(result.data);
+
+      if (res.error) {
+        const fieldErrors = res.error as { fieldErrors?: Record<string, string[]> };
+        if (fieldErrors.fieldErrors) {
+          setErrors({
+            name: fieldErrors.fieldErrors.name?.[0],
+            email: fieldErrors.fieldErrors.email?.[0],
+          });
+        } else {
+          setSubmitError(typeof res.error === "string" ? res.error : "Failed to save client");
+        }
+        return;
+      }
+      onClose();
+    } catch {
+      setSubmitError("Failed to save client");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -152,11 +180,14 @@ function ClientFormBody({
             ) : null}
           </Field>
         </FieldGroup>
+        {submitError ? (
+          <p className="text-sm text-destructive">{submitError}</p>
+        ) : null}
       </form>
       <DialogFooter>
         <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-        <Button onClick={handleSave}>
-          {isEdit ? "Save changes" : "Create"}
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Saving..." : isEdit ? "Save changes" : "Create"}
         </Button>
       </DialogFooter>
     </>
