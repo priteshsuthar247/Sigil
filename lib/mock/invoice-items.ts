@@ -1,0 +1,81 @@
+import type { InvoiceItem } from "@/lib/schemas";
+
+export const invoiceItems: InvoiceItem[] = [
+  {
+    id: "i1",
+    invoiceId: "inv1",
+    description: "Design system audit",
+    quantity: 1,
+    price: 75000,
+  },
+  {
+    id: "i2",
+    invoiceId: "inv1",
+    description: "Component refactor",
+    quantity: 1,
+    price: 50000,
+  },
+  {
+    id: "i3",
+    invoiceId: "inv2",
+    description: "API integration sprint",
+    quantity: 4,
+    price: 18000,
+  },
+  {
+    id: "i4",
+    invoiceId: "inv2",
+    description: "Project management",
+    quantity: 2,
+    price: 13000,
+  },
+  {
+    id: "i5",
+    invoiceId: "inv3",
+    description: "Q3 retainer",
+    quantity: 1,
+    price: 342050,
+  },
+  {
+    id: "i6",
+    invoiceId: "inv4",
+    description: "Frontend build (week 1)",
+    quantity: 1,
+    price: 125000,
+  },
+  {
+    id: "i7",
+    invoiceId: "inv4",
+    description: "Design tokens package",
+    quantity: 1,
+    price: 92500,
+  },
+  {
+    id: "i8",
+    invoiceId: "inv5",
+    description: "Enterprise platform — milestone 1",
+    quantity: 1,
+    price: 560000,
+  },
+  {
+    id: "i9",
+    invoiceId: "inv6",
+    description: "Maintenance retainer (Aug)",
+    quantity: 1,
+    price: 64000,
+  },
+  {
+    id: "i10",
+    invoiceId: "inv7",
+    description: "Security review",
+    quantity: 1,
+    price: 145000,
+  },
+  {
+    id: "i11",
+    invoiceId: "inv8",
+    description: "Onboarding workshop",
+    quantity: 2,
+    price: 95000,
+  },
+];

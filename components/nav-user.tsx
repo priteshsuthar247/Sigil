@@ -19,8 +19,6 @@ import {
 import {
   EllipsisVerticalIcon,
   CircleUserRoundIcon,
-  CreditCardIcon,
-  BellIcon,
   LogOutIcon,
 } from "lucide-react";
 
@@ -83,16 +81,6 @@ export function NavUser({
                 <CircleUserRoundIcon />
                 Account
               </DropdownMenuItem>
-              {/* <DropdownMenuItem>
-                <CreditCardIcon
-                />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon
-                />
-                Notifications
-              </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
