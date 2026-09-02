@@ -1,40 +1,58 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Client list", () => {
-  test("page loads with new client button", async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.goto("/dashboard/clients");
-    await expect(
-      page.getByRole("button", { name: "New Client" }),
-    ).toBeVisible();
   });
 
-  test("new client dialog opens", async ({ page }) => {
-    await page.goto("/dashboard/clients");
-    await page.getByRole("button", { name: "New Client" }).click();
-
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "New Client" })).toBeVisible();
+  test("displays seeded clients in table", async ({ page }) => {
+    // Use .first() because client names may appear in multiple places
+    await expect(page.getByText("Acme Corp").first()).toBeVisible();
+    await expect(page.getByText("Globex Corporation").first()).toBeVisible();
+    await expect(page.getByText("Initech").first()).toBeVisible();
+    await expect(page.getByText("Umbrella Inc").first()).toBeVisible();
+    await expect(page.getByText("Stark Industries").first()).toBeVisible();
+    await expect(page.getByText("Wayne Enterprises").first()).toBeVisible();
   });
 
-  test("dialog has name and email fields", async ({ page }) => {
-    await page.goto("/dashboard/clients");
-    await page.getByRole("button", { name: "New Client" }).click();
+  test("shows client emails", async ({ page }) => {
+    await expect(page.getByText("billing@acme.com").first()).toBeVisible();
+    await expect(page.getByText("accounts@globex.com").first()).toBeVisible();
+  });
+});
 
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.getByLabel("Name")).toBeVisible();
-    await expect(dialog.getByLabel("Email")).toBeVisible();
-    await expect(dialog.getByLabel("Phone")).toBeVisible();
-    await expect(dialog.getByLabel("Address")).toBeVisible();
+test.describe("Client detail", () => {
+  test("shows correct client data from database", async ({ page }) => {
+    // Navigate to clients list and click Acme Corp
+    await page.goto("/dashboard/clients");
+    await page.getByText("Acme Corp").first().click();
+    await page.waitForURL(/\/dashboard\/clients\//);
+
+    // Verify client info
+    await expect(page.getByText("billing@acme.com")).toBeVisible();
+    await expect(page.getByText("+1-555-0101")).toBeVisible();
+    await expect(page.getByText("123 Business Ave")).toBeVisible();
   });
 
-  test("cancel closes dialog", async ({ page }) => {
+  test("shows client's invoices", async ({ page }) => {
+    // Acme Corp has invoices #1001 and #1007
     await page.goto("/dashboard/clients");
-    await page.getByRole("button", { name: "New Client" }).click();
+    await page.getByText("Acme Corp").first().click();
+    await page.waitForURL(/\/dashboard\/clients\//);
 
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Cancel" }).click();
-    await expect(dialog).toBeHidden();
+    // Should show their invoices
+    await expect(page.getByText("#1001")).toBeVisible();
+    await expect(page.getByText("#1007")).toBeVisible();
+  });
+
+  test("invoice link from client detail goes to invoice detail", async ({ page }) => {
+    await page.goto("/dashboard/clients");
+    await page.getByText("Acme Corp").first().click();
+    await page.waitForURL(/\/dashboard\/clients\//);
+
+    // Click on invoice #1001
+    await page.getByText("#1001").click();
+    await page.waitForURL(/\/dashboard\/invoices\//);
+    await expect(page.getByText("Invoice #1001")).toBeVisible();
   });
 });
