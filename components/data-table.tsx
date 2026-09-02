@@ -76,7 +76,10 @@ export function DataTable<T extends RowData>({
   emptyState,
   initialPageSize = 10,
 }: DataTableProps<T>) {
-  const [data] = React.useState(() => initialData);
+  const [data, setData] = React.useState(() => initialData);
+  React.useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<ColumnVisibilityState>({});

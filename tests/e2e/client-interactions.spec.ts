@@ -53,7 +53,8 @@ test.describe("Client detail page", () => {
 
     // Dialog should close and name should update
     await expect(dialog).toBeHidden({ timeout: 10000 });
-    await expect(page.getByText("Acme Corp Updated")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByText("Acme Corp Updated").first()).toBeVisible();
 
     // Restore original name
     await page.getByRole("button", { name: "Edit" }).click();
@@ -101,21 +102,29 @@ test.describe("Client table dropdown menu", () => {
     await page.goto("/dashboard/clients");
   });
 
-  test("Edit menu item does nothing (unimplemented)", async ({ page }) => {
+  test("Edit menu item opens edit dialog", async ({ page }) => {
     const firstRow = page.locator("table tbody tr").first();
     await firstRow.getByRole("button", { name: "Open menu" }).click();
     await page.getByRole("menuitem", { name: "Edit" }).click();
 
-    // No dialog should appear — the menu item has no handler
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    // Edit dialog should appear
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("Edit Client")).toBeVisible();
+    // Close the dialog
+    await dialog.getByRole("button", { name: "Cancel" }).click();
   });
 
-  test("Delete menu item does nothing (unimplemented)", async ({ page }) => {
+  test("Delete menu item opens confirmation dialog", async ({ page }) => {
     const firstRow = page.locator("table tbody tr").first();
     await firstRow.getByRole("button", { name: "Open menu" }).click();
     await page.getByRole("menuitem", { name: "Delete" }).click();
 
-    // No confirmation dialog should appear — the menu item has no handler
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    // Confirmation dialog should appear
+    const confirmDialog = page.getByRole("alertdialog");
+    await expect(confirmDialog).toBeVisible();
+    await expect(confirmDialog.getByText("Delete client?")).toBeVisible();
+    // Cancel to avoid deleting
+    await confirmDialog.getByRole("button", { name: "Cancel" }).click();
   });
 });

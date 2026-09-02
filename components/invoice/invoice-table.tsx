@@ -30,7 +30,17 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 const columnHelper = createTableColumnHelper<Invoice>();
 
-function useColumns(): ColumnDef<typeof features, Invoice>[] {
+function useColumns({
+  onEdit,
+  onMarkPaid,
+  onDelete,
+  onDuplicate,
+}: {
+  onEdit: (invoice: Invoice) => void;
+  onMarkPaid: (invoice: Invoice) => void;
+  onDelete: (invoice: Invoice) => void;
+  onDuplicate: (invoice: Invoice) => void;
+}): ColumnDef<typeof features, Invoice>[] {
   return React.useMemo(
     () =>
       columnHelper.columns([
@@ -135,13 +145,22 @@ function useColumns(): ColumnDef<typeof features, Invoice>[] {
                 >
                   View
                 </DropdownMenuItem>
-                <DropdownMenuItem>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(row.original)}>
+                  Edit
+                </DropdownMenuItem>
                 {row.original.status !== "paid" ? (
-                  <DropdownMenuItem>Mark as paid</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onMarkPaid(row.original)}>
+                    Mark as paid
+                  </DropdownMenuItem>
                 ) : null}
-                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
+                  Duplicate
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => onDelete(row.original)}
+                >
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -149,7 +168,7 @@ function useColumns(): ColumnDef<typeof features, Invoice>[] {
           ),
         }),
       ]),
-    [],
+    [onEdit, onMarkPaid, onDelete, onDuplicate],
   );
 }
 
@@ -167,8 +186,20 @@ const emptyState = (
   </Empty>
 );
 
-export function InvoiceTable({ invoices }: { invoices: Invoice[] }) {
-  const columns = useColumns();
+export function InvoiceTable({
+  invoices,
+  onEdit,
+  onMarkPaid,
+  onDelete,
+  onDuplicate,
+}: {
+  invoices: Invoice[];
+  onEdit: (invoice: Invoice) => void;
+  onMarkPaid: (invoice: Invoice) => void;
+  onDelete: (invoice: Invoice) => void;
+  onDuplicate: (invoice: Invoice) => void;
+}) {
+  const columns = useColumns({ onEdit, onMarkPaid, onDelete, onDuplicate });
   return (
     <DataTable
       data={invoices}

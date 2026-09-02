@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getInvoiceById } from "@/server/invoices";
 import { getInvoiceItemsByInvoiceId } from "@/server/invoiceItems";
-import { InvoiceDetail } from "@/components/invoice/invoice-detail";
+import { InvoiceDetailPage } from "@/components/invoice/invoice-detail-page";
 
 export default async function Page({
   params,
@@ -18,5 +18,5 @@ export default async function Page({
   const invoice = invoiceResult.data;
   if (!invoice) notFound();
 
-  return <InvoiceDetail invoice={invoice} items={itemsResult.data ?? []} />;
+  return <InvoiceDetailPage invoice={invoice} items={itemsResult.data ?? []} />;
 }

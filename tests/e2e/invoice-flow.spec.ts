@@ -28,14 +28,13 @@ test.describe("Invoice list", () => {
   });
 
   test("filter tabs work correctly", async ({ page }) => {
-    const tablist = page.getByRole("tablist");
-    await tablist.getByRole("tab", { name: "Sent" }).click();
+    await page.getByRole("button", { name: "Sent" }).click();
     await expect(page.getByText("No invoices yet")).toBeHidden();
 
-    await tablist.getByRole("tab", { name: "Paid" }).click();
+    await page.getByRole("button", { name: "Paid" }).click();
     await expect(page.getByText("No invoices yet")).toBeHidden();
 
-    await tablist.getByRole("tab", { name: "All" }).click();
+    await page.getByRole("button", { name: "All" }).click();
     await expect(page.getByText("#1001")).toBeVisible();
   });
 });

@@ -36,25 +36,22 @@ test.describe("Invoice detail page", () => {
     await expect(page.getByText("$1,250.00")).toBeVisible();
   });
 
-  test("Edit button is NOT rendered (unimplemented)", async ({ page }) => {
-    // The invoice detail page never passes onEdit prop, so no Edit button renders
+  test("Edit button is rendered and clickable", async ({ page }) => {
     const editButton = page.getByRole("button", { name: "Edit" });
-    await expect(editButton).not.toBeVisible();
+    await expect(editButton).toBeVisible();
   });
 
-  test("Mark as paid button is NOT rendered for paid invoice (unimplemented)", async ({
+  test("Mark as paid button is NOT rendered for paid invoice", async ({
     page,
   }) => {
-    // Invoice #1001 is paid, so even if wired, Mark as paid wouldn't show
-    // But the button is never rendered regardless (onMarkPaid prop not passed)
+    // Invoice #1001 is paid, so Mark as paid shouldn't show
     const markPaidButton = page.getByRole("button", { name: "Mark as paid" });
     await expect(markPaidButton).not.toBeVisible();
   });
 
-  test("Delete button is NOT rendered (unimplemented)", async ({ page }) => {
-    // The invoice detail page never passes onDelete prop, so no Delete button renders
+  test("Delete button is rendered and clickable", async ({ page }) => {
     const deleteButton = page.getByRole("button", { name: "Delete" });
-    await expect(deleteButton).not.toBeVisible();
+    await expect(deleteButton).toBeVisible();
   });
 });
 
@@ -63,42 +60,52 @@ test.describe("Invoice table dropdown menu", () => {
     await page.goto("/dashboard/invoices");
   });
 
-  test("Edit menu item does nothing (unimplemented)", async ({ page }) => {
+  test("Edit menu item navigates to invoice detail", async ({ page }) => {
     const firstRow = page.locator("table tbody tr").first();
     await firstRow.getByRole("button", { name: "Open menu" }).click();
     await page.getByRole("menuitem", { name: "Edit" }).click();
 
-    // No dialog should appear
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    // Should navigate to invoice detail page
+    await page.waitForURL(/\/dashboard\/invoices\//);
+    await expect(page.getByText("Invoice #")).toBeVisible();
   });
 
-  test("Mark as paid menu item does nothing (unimplemented)", async ({ page }) => {
+  test("Mark as paid menu item opens confirmation dialog", async ({ page }) => {
     // Find a row with Sent status (which has "Mark as paid" option visible)
-    // The "Mark as paid" option only appears for non-paid invoices
     const sentRow = page.locator("table tbody tr").filter({ hasText: "Sent" }).first();
     await sentRow.getByRole("button", { name: "Open menu" }).click();
     await page.getByRole("menuitem", { name: "Mark as paid" }).click();
 
-    // No dialog, no status change
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    // Confirmation dialog should appear
+    const confirmDialog = page.getByRole("alertdialog");
+    await expect(confirmDialog).toBeVisible();
+    await expect(confirmDialog.getByText("Mark as paid?")).toBeVisible();
+    // Cancel to avoid changing status
+    await confirmDialog.getByRole("button", { name: "Cancel" }).click();
   });
 
-  test("Delete menu item does nothing (unimplemented)", async ({ page }) => {
+  test("Delete menu item opens confirmation dialog", async ({ page }) => {
     const firstRow = page.locator("table tbody tr").first();
     await firstRow.getByRole("button", { name: "Open menu" }).click();
     await page.getByRole("menuitem", { name: "Delete" }).click();
 
-    // No confirmation dialog
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    // Confirmation dialog should appear
+    const confirmDialog = page.getByRole("alertdialog");
+    await expect(confirmDialog).toBeVisible();
+    await expect(confirmDialog.getByText("Delete invoice?")).toBeVisible();
+    // Cancel to avoid deleting
+    await confirmDialog.getByRole("button", { name: "Cancel" }).click();
   });
 
-  test("Duplicate menu item does nothing (unimplemented)", async ({ page }) => {
+  test("Duplicate menu item duplicates the invoice", async ({ page }) => {
     const firstRow = page.locator("table tbody tr").first();
+    const invoiceNumber = await firstRow.locator("td").first().textContent();
     await firstRow.getByRole("button", { name: "Open menu" }).click();
     await page.getByRole("menuitem", { name: "Duplicate" }).click();
 
-    // No new invoice created, no dialog
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    // Page should refresh and a new invoice should appear
+    // The table should now have more rows
+    await expect(page.locator("table tbody tr").first()).toBeVisible();
   });
 });
 
@@ -155,27 +162,24 @@ test.describe("Invoice filter tabs", () => {
   });
 
   test("All tab shows all invoices", async ({ page }) => {
-    await page.getByRole("tab", { name: "All" }).click();
+    await page.getByRole("button", { name: "All" }).click();
     // Should see both paid and sent invoices
     await expect(page.getByText("#1001").first()).toBeVisible();
     await expect(page.getByText("#1002").first()).toBeVisible();
   });
 
-  test("Sent tab should filter to sent invoices only (currently broken)", async ({
+  test("Sent tab should filter to sent invoices only", async ({
     page,
   }) => {
-    test.fail(); // Filter tabs don't actually filter — documenting broken feature
-    await page.getByRole("tab", { name: "Sent" }).click();
-    // EXPECTED: only sent invoices visible. ACTUAL: all invoices still shown.
+    await page.getByRole("button", { name: "Sent" }).click();
     const firstBadge = page.locator("table tbody tr [data-slot='badge']").first();
     await expect(firstBadge).toHaveText("Sent");
   });
 
-  test("Paid tab should filter to paid invoices only (currently broken)", async ({
+  test("Paid tab should filter to paid invoices only", async ({
     page,
   }) => {
-    await page.getByRole("tab", { name: "Paid" }).click();
-    // EXPECTED: only paid invoices visible. ACTUAL: all invoices still shown.
+    await page.getByRole("button", { name: "Paid" }).click();
     const firstBadge = page.locator("table tbody tr [data-slot='badge']").first();
     await expect(firstBadge).toHaveText("Paid");
   });

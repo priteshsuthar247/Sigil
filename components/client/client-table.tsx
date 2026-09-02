@@ -29,7 +29,13 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 const columnHelper = createTableColumnHelper<Client>();
 
-function useColumns(): ColumnDef<typeof features, Client>[] {
+function useColumns({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: (client: Client) => void;
+  onDelete: (client: Client) => void;
+}): ColumnDef<typeof features, Client>[] {
   return React.useMemo(
     () =>
       columnHelper.columns([
@@ -130,9 +136,14 @@ function useColumns(): ColumnDef<typeof features, Client>[] {
                 >
                   View
                 </DropdownMenuItem>
-                <DropdownMenuItem>Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(row.original)}>
+                  Edit
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => onDelete(row.original)}
+                >
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -140,7 +151,7 @@ function useColumns(): ColumnDef<typeof features, Client>[] {
           ),
         }),
       ]),
-    [],
+    [onEdit, onDelete],
   );
 }
 
@@ -158,8 +169,16 @@ const emptyState = (
   </Empty>
 );
 
-export function ClientTable({ clients }: { clients: Client[] }) {
-  const columns = useColumns();
+export function ClientTable({
+  clients,
+  onEdit,
+  onDelete,
+}: {
+  clients: Client[];
+  onEdit: (client: Client) => void;
+  onDelete: (client: Client) => void;
+}) {
+  const columns = useColumns({ onEdit, onDelete });
   return (
     <DataTable
       data={clients}

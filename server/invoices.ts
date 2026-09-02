@@ -122,6 +122,58 @@ export async function createInvoiceWithItems(input: unknown) {
   }
 }
 
+export async function duplicateInvoice(invoiceId: string) {
+  try {
+    const [existing] = await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.id, invoiceId))
+      .limit(1);
+    if (!existing) return { error: "Invoice not found" };
+
+    const items = await db
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, invoiceId));
+
+    const [lastInvoice] = await db
+      .select({ number: invoices.number })
+      .from(invoices)
+      .where(eq(invoices.userId, existing.userId))
+      .orderBy(desc(invoices.number))
+      .limit(1);
+    const nextNumber = (lastInvoice?.number ?? 0) + 1;
+
+    const [invoice] = await db
+      .insert(invoices)
+      .values({
+        number: nextNumber,
+        userId: existing.userId,
+        clientId: existing.clientId,
+        status: "sent",
+        totalAmount: existing.totalAmount,
+      })
+      .returning();
+
+    if (items.length) {
+      await db.insert(invoiceItems).values(
+        items.map((item) => ({
+          invoiceId: invoice.id,
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      );
+    }
+
+    revalidatePath("/dashboard/invoices");
+    return { data: { invoice } };
+  } catch (error) {
+    console.error("Error duplicating invoice:", error);
+    return { error: "Failed to duplicate invoice" };
+  }
+}
+
 export async function updateInvoiceWithItems(
   invoiceId: string,
   input: unknown,
