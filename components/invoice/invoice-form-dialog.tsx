@@ -170,6 +170,9 @@ function InvoiceFormBody({
                 setError(null);
               }}
               items={clients.map((c) => ({ value: c.id, label: c.name }))}
+              itemToStringLabel={(v) =>
+                clients.find((c) => c.id === v)?.name ?? ""
+              }
             >
               <ComboboxInput
                 placeholder="Select a client"
