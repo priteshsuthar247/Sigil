@@ -2,16 +2,24 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, ReceiptIcon, UsersIcon } from "lucide-react";
-import { invoices } from "@/lib/mock/invoices";
-import { clients } from "@/lib/mock/clients";
+import { getInvoices } from "@/server/invoices";
+import { getClients } from "@/server/clients";
 import { formatCurrency } from "@/lib/schemas";
 
-export default function Page() {
-  const totalRevenue = invoices
+export default async function Page() {
+  const [invoicesResult, clientsResult] = await Promise.all([
+    getInvoices(),
+    getClients(),
+  ]);
+
+  const invoicesList = invoicesResult.data ?? [];
+  const clientsList = clientsResult.data ?? [];
+
+  const totalRevenue = invoicesList
     .filter((inv) => inv.status === "paid")
     .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
-  const recentInvoices = [...invoices]
+  const recentInvoices = [...invoicesList]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, 5);
 
@@ -24,7 +32,7 @@ export default function Page() {
             <UsersIcon className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{clients.length}</div>
+            <div className="text-2xl font-bold">{clientsList.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -33,7 +41,7 @@ export default function Page() {
             <ReceiptIcon className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{invoices.length}</div>
+            <div className="text-2xl font-bold">{invoicesList.length}</div>
           </CardContent>
         </Card>
         <Card>

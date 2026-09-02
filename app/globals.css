@@ -116,7 +116,7 @@
     cursor: pointer;
   }
   [data-sidebar="menu-button"][data-active] {
-    border-left: 2px solid var(--foreground);
-    padding-left: calc(0.5rem - 2px);
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
   }
 }

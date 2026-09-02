@@ -19,7 +19,6 @@ export type Invoice = {
 
 // ── Form schemas (reuse drizzle-zod validators) ────────────────
 import { createClientSchema } from "@/db/validators";
-import { invoiceItemFormSchema } from "@/db/validators";
 
 export const clientFormSchema = createClientSchema.extend({
   phone: createClientSchema.shape.phone
@@ -31,7 +30,12 @@ export const clientFormSchema = createClientSchema.extend({
 });
 export type ClientFormValues = z.infer<typeof clientFormSchema>;
 
-export { invoiceItemFormSchema };
+// UI-side schema: accepts decimal prices (dollars), converts to cents before DB
+export const invoiceItemFormSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  quantity: z.number().int().min(1, "Quantity must be at least 1"),
+  price: z.number().nonnegative("Price must be non-negative"),
+});
 export type InvoiceItemFormValues = z.infer<typeof invoiceItemFormSchema>;
 
 // ── Utilities ──────────────────────────────────────────────────

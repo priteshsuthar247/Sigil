@@ -96,10 +96,14 @@ export function InvoiceItemsEditor({
                 id={`price-${row.id}`}
                 type="number"
                 min={0}
-                value={row.price}
+                step="0.01"
+                value={(row.price / 100).toFixed(2)}
                 onChange={(e) =>
                   updateRow(row.id, {
-                    price: Math.max(0, Number(e.target.value || 0)),
+                    price: Math.max(
+                      0,
+                      Math.round(Number(e.target.value || 0) * 100),
+                    ),
                   })
                 }
               />

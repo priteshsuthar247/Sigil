@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { invoices } from "@/lib/mock/invoices";
-import { invoiceItems } from "@/lib/mock/invoice-items";
+import { getInvoiceById } from "@/server/invoices";
+import { getInvoiceItemsByInvoiceId } from "@/server/invoiceItems";
 import { InvoiceDetail } from "@/components/invoice/invoice-detail";
 
 export default async function Page({
@@ -9,10 +9,14 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const invoice = invoices.find((inv) => inv.id === id);
+
+  const [invoiceResult, itemsResult] = await Promise.all([
+    getInvoiceById(id),
+    getInvoiceItemsByInvoiceId(id),
+  ]);
+
+  const invoice = invoiceResult.data;
   if (!invoice) notFound();
 
-  const items = invoiceItems.filter((it) => it.invoiceId === id);
-
-  return <InvoiceDetail invoice={invoice} items={items} />;
+  return <InvoiceDetail invoice={invoice} items={itemsResult.data ?? []} />;
 }

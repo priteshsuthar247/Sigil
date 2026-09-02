@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   Card,
   CardAction,
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { InvoiceTable } from "@/components/invoice/invoice-table";
+import { InvoiceFormDialog } from "@/components/invoice/invoice-form-dialog";
 import { ClientFormDialog } from "@/components/client/client-form-dialog";
 import {
   AlertDialog,
@@ -31,14 +31,13 @@ import { formatDate, type Client, type Invoice } from "@/lib/schemas";
 export function ClientDetail({
   client,
   invoices,
-  allInvoicesHref = "/dashboard/invoices",
 }: {
   client: Client;
   invoices: Invoice[];
-  allInvoicesHref?: string;
 }) {
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [invoiceOpen, setInvoiceOpen] = React.useState(false);
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,13 +110,20 @@ export function ClientDetail({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-medium">Invoices</h2>
-          <Button size="sm" nativeButton={false} render={<Link href={allInvoicesHref} />}>
+          <Button size="sm" onClick={() => setInvoiceOpen(true)}>
             <PlusIcon data-icon="inline-start" />
             New Invoice
           </Button>
         </div>
         <InvoiceTable invoices={invoices} />
       </div>
+
+      <InvoiceFormDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        clients={[client]}
+        defaultClientId={client.id}
+      />
 
       <ClientFormDialog
         open={editOpen}

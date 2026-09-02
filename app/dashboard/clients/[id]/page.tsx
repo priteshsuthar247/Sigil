@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { clients } from "@/lib/mock/clients";
-import { invoices } from "@/lib/mock/invoices";
+import { getClientById } from "@/server/clients";
+import { getInvoices } from "@/server/invoices";
 import { ClientDetail } from "@/components/client/client-detail";
 
 export default async function Page({
@@ -9,16 +9,23 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const client = clients.find((c) => c.id === id);
+
+  const [clientResult, invoicesResult] = await Promise.all([
+    getClientById(id),
+    getInvoices(),
+  ]);
+
+  const client = clientResult.data;
   if (!client) notFound();
 
-  const clientInvoices = invoices.filter((inv) => inv.clientId === id);
+  const clientInvoices = (invoicesResult.data ?? []).filter(
+    (inv) => inv.clientId === id,
+  );
 
   return (
     <ClientDetail
       client={client}
       invoices={clientInvoices}
-      allInvoicesHref="/dashboard/invoices"
     />
   );
 }

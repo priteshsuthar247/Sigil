@@ -193,7 +193,7 @@ export async function updateInvoiceWithItems(
       return { data: { invoice: workingInvoice } };
     });
 
-    if ("data" in txResult) revalidatePath("/invoices");
+    if ("data" in txResult) revalidatePath("/dashboard/invoices");
     return txResult;
   } catch (error) {
     console.error("Error updating invoice with items:", error);

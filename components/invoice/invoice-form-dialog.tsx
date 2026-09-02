@@ -45,11 +45,13 @@ export function InvoiceFormDialog({
   onOpenChange,
   invoice,
   clients,
+  defaultClientId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice?: Invoice;
   clients: Client[];
+  defaultClientId?: string;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,6 +60,7 @@ export function InvoiceFormDialog({
           <InvoiceFormBody
             invoice={invoice}
             clients={clients}
+            defaultClientId={defaultClientId}
             onClose={() => onOpenChange(false)}
           />
         ) : null}
@@ -69,16 +72,18 @@ export function InvoiceFormDialog({
 function InvoiceFormBody({
   invoice,
   clients,
+  defaultClientId,
   onClose,
 }: {
   invoice?: Invoice;
   clients: Client[];
+  defaultClientId?: string;
   onClose: () => void;
 }) {
   const isEdit = Boolean(invoice);
 
   const [clientId, setClientId] = React.useState<string>(
-    invoice?.clientId ?? "",
+    invoice?.clientId ?? defaultClientId ?? "",
   );
   const [status, setStatus] = React.useState<InvoiceStatus>(
     invoice?.status ?? "sent",
