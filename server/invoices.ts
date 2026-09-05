@@ -7,20 +7,26 @@ import {
 } from "@/db/validators";
 import { invoices, invoiceItems, clients, invoiceStatus, users } from "@/db/schema";
 import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
+import { auth } from "@/auth";
 
 export async function getInvoices({ page = 1, limit = 10, status, sortBy = "createdAt", sortDir = "desc", q } = {} as { page?: number; limit?: number; status?: string; sortBy?: string; sortDir?: string; q?: string }) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { data: [], total: 0, error: "Unauthorized" };
+    }
+    const userId = session.user.id;
     const allowedLimits = [10,20,30,50,100];
     const safeLimit = allowedLimits.includes(limit) ? limit : 10;
     const safePage = page > 0 ? page : 1;
     const offset = (safePage - 1) * safeLimit;
-    const conditions = [];
+    const conditions = [eq(invoices.userId, userId)];
     if (status && status !== "all") conditions.push(eq(invoices.status, status as any));
     if (q && q.trim() !== "") {
       const search = `%${q.trim()}%`;
-      conditions.push(or(sql`CAST(${invoices.number} AS TEXT) ILIKE ${search}`, ilike(clients.name, search)));
+      conditions.push(sql`(${invoices.number}::text ILIKE ${search} OR ${clients.name} ILIKE ${search})`);
     }
-    const where = conditions.length ? and(...conditions) : undefined;
+    const where = and(...conditions);
 
     const orderColumn =
       sortBy === "number" ? invoices.number :
@@ -60,6 +66,10 @@ export async function getInvoices({ page = 1, limit = 10, status, sortBy = "crea
 
 export async function getInvoiceById(invoiceId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { data: null, error: "Unauthorized" };
+    }
     const [invoice] = await db
       .select({
         id: invoices.id,
@@ -73,7 +83,7 @@ export async function getInvoiceById(invoiceId: string) {
       })
       .from(invoices)
       .innerJoin(clients, eq(invoices.clientId, clients.id))
-      .where(eq(invoices.id, invoiceId))
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.userId, session.user.id)))
       .limit(1);
     return { data: invoice ?? null };
   } catch (error) {
@@ -84,9 +94,13 @@ export async function getInvoiceById(invoiceId: string) {
 
 export async function deleteInvoice(invoiceId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { error: "Unauthorized" };
+    }
     const [deletedInvoice] = await db
       .delete(invoices)
-      .where(eq(invoices.id, invoiceId))
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.userId, session.user.id)))
       .returning();
     revalidatePath("/dashboard/invoices");
     return { data: deletedInvoice ?? null };
@@ -101,12 +115,11 @@ export async function createInvoiceWithItems(input: unknown) {
   if (!result.success) return { error: result.error.flatten() };
   const data = result.data;
 
-  let userId = data.userId;
-  if (!userId) {
-    const [firstUser] = await db.select({ id: users.id }).from(users).limit(1);
-    userId = firstUser?.id;
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
   }
-  if (!userId) return { error: "No user found. Please create a user first." };
+  const userId = session.user.id;
 
   try {
     const total = data.items.reduce(
@@ -162,11 +175,16 @@ export async function updateInvoiceWithItems(
   if (!result.success) return { error: result.error.flatten() };
   const data = result.data;
 
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
   try {
     const [existing] = await db
       .select()
       .from(invoices)
-      .where(eq(invoices.id, invoiceId))
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.userId, session.user.id)))
       .limit(1);
 
     if (!existing) return { error: `Invoice ${invoiceId} not found` };

@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { users, clients, invoices, invoiceItems } from "./schema";
+import bcrypt from "bcryptjs";
 
 async function seed() {
   const db = drizzle(process.env.DATABASE_URL!);
@@ -13,12 +14,13 @@ async function seed() {
   await db.delete(users);
 
   // Create user
+  const hashedPassword = await bcrypt.hash("password123", 10);
   const [user] = await db
     .insert(users)
     .values({
       name: "John Doe",
       email: "john@example.com",
-      password: "hashed_password_placeholder",
+      password: hashedPassword,
     })
     .returning();
   console.log(`Created user: ${user.name} (${user.id})`);
@@ -28,36 +30,42 @@ async function seed() {
     .insert(clients)
     .values([
       {
+        userId: user.id,
         name: "Acme Corp",
         email: "billing@acme.com",
         phone: "+1-555-0101",
         address: "123 Business Ave, Suite 100, San Francisco, CA 94105",
       },
       {
+        userId: user.id,
         name: "Globex Corporation",
         email: "accounts@globex.com",
         phone: "+1-555-0102",
         address: "456 Industrial Blvd, Chicago, IL 60601",
       },
       {
+        userId: user.id,
         name: "Initech",
         email: "finance@initech.com",
         phone: "+1-555-0103",
         address: "789 Office Park, Austin, TX 73301",
       },
       {
+        userId: user.id,
         name: "Umbrella Inc",
         email: "ap@umbrella.com",
         phone: "+1-555-0104",
         address: "321 Corp Center, Raccoon City, ST 00000",
       },
       {
+        userId: user.id,
         name: "Stark Industries",
         email: "invoices@stark.com",
         phone: "+1-555-0105",
         address: "200 Park Avenue, New York, NY 10166",
       },
       {
+        userId: user.id,
         name: "Wayne Enterprises",
         email: "billing@wayne.com",
         phone: "+1-555-0106",

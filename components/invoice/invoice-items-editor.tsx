@@ -52,13 +52,13 @@ export function InvoiceItemsEditor({
         </span>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="max-h-[50vh] overflow-auto pr-2 flex flex-col gap-3">
         {value.map((row) => (
           <div
             key={row.id}
             className="grid grid-cols-12 items-end gap-2 rounded-lg border p-3"
           >
-            <Field className="col-span-12 md:col-span-6">
+            <Field className="col-span-12 md:col-span-5">
               <Label htmlFor={`desc-${row.id}`} className="sr-only">
                 Description
               </Label>
@@ -95,22 +95,19 @@ export function InvoiceItemsEditor({
                 id={`price-${row.id}`}
                 type="number"
                 min={0}
-                step="0.01"
-                value={(row.price / 100).toFixed(2)}
+                step="1"
+                value={row.price}
                 onChange={(e) =>
                   updateRow(row.id, {
-                    price: Math.max(
-                      0,
-                      Math.round(Number(e.target.value || 0) * 100),
-                    ),
+                    price: Math.max(0, Math.round(Number(e.target.value || 0))),
                   })
                 }
               />
             </Field>
-            <div className="col-span-3 flex items-center justify-end text-sm tabular-nums text-muted-foreground md:col-span-1">
+            <div className="col-span-3 flex items-center justify-end text-sm tabular-nums text-muted-foreground md:col-span-2 whitespace-nowrap">
               {formatCurrency(row.quantity * row.price)}
             </div>
-            <div className="col-span-1 flex items-end justify-end">
+            <div className="col-span-1 flex items-end justify-end md:col-span-1">
               <Button
                 type="button"
                 variant="ghost"

@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboardIcon, UsersIcon, ReceiptIcon, CommandIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -16,12 +17,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
-const user = {
-  name: "Pritesh Suthar",
-  email: "you@invoicing.test",
-  avatar: "/avatars/user.jpg",
-};
 
 const navItems = [
   {
@@ -43,6 +38,13 @@ const navItems = [
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+
+  const user = {
+    name: status === "loading" ? "Loading..." : session?.user?.name ?? "User",
+    email: status === "loading" ? "" : session?.user?.email ?? "",
+    avatar: "/avatars/user.jpg",
+  };
 
   const items = navItems.map((item) => {
     const Icon = item.icon;

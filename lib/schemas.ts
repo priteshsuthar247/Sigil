@@ -39,11 +39,12 @@ export const invoiceItemFormSchema = z.object({
 export type InvoiceItemFormValues = z.infer<typeof invoiceItemFormSchema>;
 
 // ── Utilities ──────────────────────────────────────────────────
-export function formatCurrency(amount: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(amount: number, currency = "INR"): string {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
-  }).format(amount / 100);
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 export function formatDate(value: Date | string | null | undefined): string {

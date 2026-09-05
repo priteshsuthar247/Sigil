@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const titleMap: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -37,9 +38,10 @@ export function SiteHeader({
           className="mx-2 h-4 data-vertical:self-auto"
         />
         <h1 className="text-base font-medium">{heading}</h1>
-        {actions ? (
-          <div className="ml-auto flex items-center gap-2">{actions}</div>
-        ) : null}
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+          {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+        </div>
       </div>
     </header>
   );
