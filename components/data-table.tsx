@@ -10,7 +10,6 @@ import {
   createSortedRowModel,
   FlexRender,
   rowPaginationFeature,
-  rowSelectionFeature,
   rowSortingFeature,
   tableFeatures,
   useTable,
@@ -23,6 +22,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -50,7 +50,6 @@ export const features = tableFeatures({
   columnFilteringFeature,
   columnVisibilityFeature,
   rowPaginationFeature,
-  rowSelectionFeature,
   rowSortingFeature,
   filteredRowModel: createFilteredRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
@@ -67,6 +66,7 @@ type DataTableProps<T extends RowData> = {
   getRowId: (row: T, index: number) => string;
   emptyState?: React.ReactNode;
   initialPageSize?: number;
+  isLoading?: boolean;
 };
 
 export function DataTable<T extends RowData>({
@@ -75,12 +75,12 @@ export function DataTable<T extends RowData>({
   getRowId,
   emptyState,
   initialPageSize = 10,
+  isLoading = false,
 }: DataTableProps<T>) {
   const [data, setData] = React.useState(() => initialData);
   React.useEffect(() => {
     setData(initialData);
   }, [initialData]);
-  const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<ColumnVisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -99,13 +99,10 @@ export function DataTable<T extends RowData>({
     state: {
       sorting,
       columnVisibility,
-      rowSelection,
       columnFilters,
       pagination,
     },
     getRowId: (row, index) => getRowId(row, index),
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -132,12 +129,19 @@ export function DataTable<T extends RowData>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`}>
+                  {Array.from({ length: columns.length }).map((_, j) => (
+                    <TableCell key={`skeleton-cell-${j}`}>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       <FlexRender cell={cell} />
@@ -158,11 +162,7 @@ export function DataTable<T extends RowData>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between">
-        <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
+      <div className="flex items-center justify-end">
         <div className="flex w-full items-center gap-8 lg:w-fit">
           <div className="hidden items-center gap-2 lg:flex">
             <Label htmlFor="rows-per-page" className="text-sm font-medium">

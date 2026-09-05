@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -13,7 +14,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, ReceiptIcon } from "lucide-react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { InvoiceTable } from "@/components/invoice/invoice-table";
 import {
   InvoiceFilters,
@@ -22,7 +30,6 @@ import {
 import { InvoiceFormDialog } from "@/components/invoice/invoice-form-dialog";
 import {
   deleteInvoice,
-  duplicateInvoice,
   updateInvoiceWithItems,
 } from "@/server/invoices";
 import type { Client, Invoice } from "@/lib/schemas";
@@ -35,40 +42,63 @@ export function InvoicesPageClient({
   clients: Client[];
 }) {
   const router = useRouter();
-  const [filter, setFilter] = React.useState<InvoiceFilter>("all");
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<Invoice | null>(null);
-  const [markPaidTarget, setMarkPaidTarget] = React.useState<Invoice | null>(
+  const pathname = usePathname();
+  const [filter, setFilter] = useState<InvoiceFilter>("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
+  const [markPaidTarget, setMarkPaidTarget] = useState<Invoice | null>(
     null,
   );
+  const [deleting, setDeleting] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filtered: Invoice[] = React.useMemo(() => {
+  const filtered: Invoice[] = useMemo(() => {
     if (filter === "all") return invoices;
     return invoices.filter((inv) => inv.status === filter);
   }, [filter, invoices]);
 
-  const handleEdit = (invoice: Invoice) => {
+  useEffect(() => {
+    if (refreshing) setRefreshing(false);
+  }, [pathname, invoices]);
+
+  const handleEdit = useCallback((invoice: Invoice) => {
     router.push(`/dashboard/invoices/${invoice.id}`);
-  };
+  }, [router]);
 
-  const handleMarkPaid = async () => {
-    if (!markPaidTarget) return;
-    await updateInvoiceWithItems(markPaidTarget.id, { status: "paid" });
-    setMarkPaidTarget(null);
-    router.refresh();
-  };
+  const handleMarkPaid = useCallback(async () => {
+    if (!markPaidTarget || markingPaid) return;
+    setMarkingPaid(true);
+    setRefreshing(true);
+    try {
+      await updateInvoiceWithItems(markPaidTarget.id, { status: "paid" });
+      toast.success(`Invoice #${markPaidTarget.number} marked as paid`);
+      setMarkPaidTarget(null);
+      router.refresh();
+    } catch {
+      toast.error("Failed to mark invoice as paid");
+      setRefreshing(false);
+    } finally {
+      setMarkingPaid(false);
+    }
+  }, [markPaidTarget, router, markingPaid]);
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    await deleteInvoice(deleteTarget.id);
-    setDeleteTarget(null);
-    router.refresh();
-  };
-
-  const handleDuplicate = async (invoice: Invoice) => {
-    await duplicateInvoice(invoice.id);
-    router.refresh();
-  };
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    setRefreshing(true);
+    try {
+      await deleteInvoice(deleteTarget.id);
+      toast.success(`Invoice #${deleteTarget.number} deleted`);
+      setDeleteTarget(null);
+      router.refresh();
+    } catch {
+      toast.error("Failed to delete invoice");
+      setRefreshing(false);
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteTarget, router, deleting]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -79,13 +109,35 @@ export function InvoicesPageClient({
           New Invoice
         </Button>
       </div>
-      <InvoiceTable
-        invoices={filtered}
-        onEdit={handleEdit}
-        onMarkPaid={(inv) => setMarkPaidTarget(inv)}
-        onDelete={(inv) => setDeleteTarget(inv)}
-        onDuplicate={handleDuplicate}
-      />
+      {filtered.length === 0 ? (
+        <Empty>
+          <EmptyMedia variant="icon">
+            <ReceiptIcon />
+          </EmptyMedia>
+          <EmptyHeader>
+            <EmptyTitle>
+              {filter === "all"
+                ? "No invoices yet"
+                : filter === "sent"
+                ? "No sent invoices"
+                : "No paid invoices"}
+            </EmptyTitle>
+            <EmptyDescription>
+              {filter === "all"
+                ? "Create your first invoice to get started."
+                : `Switch to “All” or create a ${filter} invoice.`}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <InvoiceTable
+          invoices={filtered}
+          onEdit={handleEdit}
+          onMarkPaid={(inv) => setMarkPaidTarget(inv)}
+          onDelete={(inv) => setDeleteTarget(inv)}
+          isLoading={refreshing}
+        />
+      )}
       <InvoiceFormDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
@@ -107,8 +159,8 @@ export function InvoicesPageClient({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -130,8 +182,8 @@ export function InvoicesPageClient({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkPaid}>
+            <AlertDialogCancel disabled={markingPaid}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkPaid} disabled={markingPaid}>
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -12,19 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/date-picker";
 import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Combobox,
   ComboboxContent,
@@ -38,19 +31,22 @@ import {
   makeInitialItemRows,
   type InvoiceItemRow,
 } from "@/components/invoice/invoice-items-editor";
-import { createInvoiceWithItems } from "@/server/invoices";
+import { createInvoiceWithItems, updateInvoiceWithItems } from "@/server/invoices";
 import type { Client, Invoice, InvoiceStatus } from "@/lib/schemas";
+import { toast } from "sonner";
 
 export function InvoiceFormDialog({
   open,
   onOpenChange,
   invoice,
+  items,
   clients,
   defaultClientId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice?: Invoice;
+  items?: { description: string; quantity: number; price: number }[];
   clients: Client[];
   defaultClientId?: string;
 }) {
@@ -60,6 +56,7 @@ export function InvoiceFormDialog({
         {open ? (
           <InvoiceFormBody
             invoice={invoice}
+            items={items}
             clients={clients}
             defaultClientId={defaultClientId}
             onClose={() => onOpenChange(false)}
@@ -72,11 +69,13 @@ export function InvoiceFormDialog({
 
 function InvoiceFormBody({
   invoice,
+  items,
   clients,
   defaultClientId,
   onClose,
 }: {
   invoice?: Invoice;
+  items?: { description: string; quantity: number; price: number }[];
   clients: Client[];
   defaultClientId?: string;
   onClose: () => void;
@@ -91,17 +90,17 @@ function InvoiceFormBody({
   const [status, setStatus] = React.useState<InvoiceStatus>(
     invoice?.status ?? "sent",
   );
-  const [createdAt, setCreatedAt] = React.useState<string>(
-    invoice?.createdAt
-      ? toDateInput(invoice.createdAt)
-      : toDateInput(new Date()),
-  );
-  const [paidAt, setPaidAt] = React.useState<string | undefined>(
-    invoice?.paidAt ? toDateInput(invoice.paidAt) : undefined,
-  );
-  const [items, setItems] = React.useState<InvoiceItemRow[]>(
-    makeInitialItemRows(),
-  );
+  const [itemRows, setItemRows] = React.useState<InvoiceItemRow[]>(() => {
+    if (isEdit && items && items.length > 0) {
+      return items.map((i, idx) => ({
+        id: `edit-${idx}-${Math.random().toString(36).slice(2)}`,
+        description: i.description,
+        quantity: i.quantity,
+        price: i.price,
+      }));
+    }
+    return makeInitialItemRows();
+  });
 
   const handleSave = async () => {
     if (!clientId) {
@@ -109,7 +108,7 @@ function InvoiceFormBody({
       return;
     }
 
-    const validItems = items.filter((row) => row.description.trim() !== "");
+    const validItems = itemRows.filter((row) => row.description.trim() !== "");
     if (validItems.length === 0) {
       setError("At least one item with a description is required");
       return;
@@ -118,27 +117,46 @@ function InvoiceFormBody({
     setError(null);
     setSaving(true);
     try {
-      const res = await createInvoiceWithItems({
-        clientId,
-        status,
-        items: validItems.map((row) => ({
-          description: row.description,
-          quantity: row.quantity,
-          price: row.price,
-        })),
-      });
-
-      if (res.error) {
-        setError("Failed to create invoice");
-        return;
+      if (isEdit && invoice) {
+        const res = await updateInvoiceWithItems(invoice.id, {
+          clientId,
+          status,
+          items: validItems.map((row) => ({
+            description: row.description,
+            quantity: row.quantity,
+            price: row.price,
+          })),
+        });
+        if (res.error) {
+          setError(Array.isArray(res.error) ? res.error[0]?.message : "Failed to update invoice");
+          return;
+        }
+        toast.success(`Invoice #${invoice.number} updated`);
+      } else {
+        const res = await createInvoiceWithItems({
+          clientId,
+          status,
+          items: validItems.map((row) => ({
+            description: row.description,
+            quantity: row.quantity,
+            price: row.price,
+          })),
+        });
+        if (res.error) {
+          setError("Failed to create invoice");
+          return;
+        }
+        toast.success("Invoice created");
       }
       onClose();
     } catch {
-      setError("Failed to create invoice");
+      setError(isEdit ? "Failed to update invoice" : "Failed to create invoice");
+      toast.error(isEdit ? "Failed to update invoice" : "Failed to create invoice");
     } finally {
       setSaving(false);
     }
   };
+
 
   return (
     <>
@@ -175,9 +193,11 @@ function InvoiceFormBody({
               }
             >
               <ComboboxInput
+                autoFocus={!isEdit}
                 placeholder="Select a client"
                 showTrigger
                 showClear
+                disabled={isEdit || saving}
               />
               <ComboboxContent>
                 <ComboboxList>
@@ -193,19 +213,18 @@ function InvoiceFormBody({
 
           <div className="grid grid-cols-2 gap-4">
             <Field>
-              <FieldLabel htmlFor="status">Status</FieldLabel>
-              <Select
-                value={status}
-                onValueChange={(v) => setStatus(v as InvoiceStatus)}
-              >
-                <SelectTrigger id="status" className="w-full">
-                  <SelectValue placeholder="Select a status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sent">Sent</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                </SelectContent>
-              </Select>
+              <FieldLabel>Mark as paid</FieldLabel>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={status === "paid"}
+                  onCheckedChange={(checked) => setStatus(checked ? "paid" : "sent")}
+                  disabled={saving}
+                  aria-label="Mark as paid"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {status === "paid" ? "Paid" : "Sent"}
+                </span>
+              </div>
             </Field>
             <Field>
               <FieldLabel htmlFor="number">Invoice number</FieldLabel>
@@ -219,26 +238,7 @@ function InvoiceFormBody({
             </Field>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field>
-              <FieldLabel>Created</FieldLabel>
-              <DatePicker
-                value={createdAt}
-                onChange={(v) => setCreatedAt(v ?? "")}
-                placeholder="Pick a date"
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Paid</FieldLabel>
-              <DatePicker
-                value={paidAt}
-                onChange={(v) => setPaidAt(v)}
-                placeholder="Not paid yet"
-              />
-            </Field>
-          </div>
-
-          <InvoiceItemsEditor value={items} onChange={setItems} />
+          <InvoiceItemsEditor value={itemRows} onChange={setItemRows} />
 
           {error ? (
             <p className="text-sm text-destructive">{error}</p>
@@ -249,16 +249,9 @@ function InvoiceFormBody({
       <DialogFooter>
         <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
         <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Creating..." : isEdit ? "Save changes" : "Create"}
+          {saving ? (isEdit ? "Saving..." : "Creating...") : isEdit ? "Save changes" : "Create"}
         </Button>
       </DialogFooter>
     </>
   );
-}
-
-function toDateInput(value: Date): string {
-  const y = value.getFullYear();
-  const m = String(value.getMonth() + 1).padStart(2, "0");
-  const d = String(value.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }

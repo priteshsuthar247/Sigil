@@ -5,9 +5,7 @@ import Link from "next/link";
 import {
   DataTable,
   createTableColumnHelper,
-  features,
 } from "@/components/data-table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -35,47 +33,18 @@ function useColumns({
 }: {
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
-}): ColumnDef<typeof features, Client>[] {
+}) {
   return React.useMemo(
     () =>
       columnHelper.columns([
-        columnHelper.display({
-          id: "select",
-          header: ({ table }) => (
-            <div className="flex items-center justify-center">
-              <Checkbox
-                checked={table.getIsAllPageRowsSelected()}
-                indeterminate={
-                  table.getIsSomePageRowsSelected() &&
-                  !table.getIsAllPageRowsSelected()
-                }
-                onCheckedChange={(value) =>
-                  table.toggleAllPageRowsSelected(!!value)
-                }
-                aria-label="Select all"
-              />
-            </div>
-          ),
-          cell: ({ row }) => (
-            <div className="flex items-center justify-center">
-              <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-              />
-            </div>
-          ),
-          enableSorting: false,
-          enableHiding: false,
-        }),
         columnHelper.accessor("name", {
           header: "Name",
           cell: ({ row }) => (
             <Button
               variant="link"
-              className="w-fit px-0 text-left text-foreground"
+              className="w-fit px-0 text-left text-foreground font-semibold"
               nativeButton={false}
-              render={<Link href={`/dashboard/clients/${row.original.id}`} />}
+              render={<Link href={`/dashboard/clients/${row.original.id}`} prefetch={false} />}
             >
               {row.original.name}
             </Button>
@@ -131,7 +100,7 @@ function useColumns({
               <DropdownMenuContent align="end" className="w-36">
                 <DropdownMenuItem
                   render={
-                    <Link href={`/dashboard/clients/${row.original.id}`} />
+                    <Link href={`/dashboard/clients/${row.original.id}`} prefetch={false} />
                   }
                 >
                   View
@@ -173,10 +142,12 @@ export function ClientTable({
   clients,
   onEdit,
   onDelete,
+  isLoading = false,
 }: {
   clients: Client[];
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
+  isLoading?: boolean;
 }) {
   const columns = useColumns({ onEdit, onDelete });
   return (
@@ -185,6 +156,7 @@ export function ClientTable({
       columns={columns}
       getRowId={(row) => row.id}
       emptyState={emptyState}
+      isLoading={isLoading}
     />
   );
 }

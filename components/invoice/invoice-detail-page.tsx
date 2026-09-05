@@ -1,7 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ChevronRightIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,47 +16,83 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { InvoiceDetail } from "@/components/invoice/invoice-detail";
+import { InvoiceFormDialog } from "@/components/invoice/invoice-form-dialog";
 import { deleteInvoice, updateInvoiceWithItems } from "@/server/invoices";
-import type { Invoice, InvoiceItem } from "@/lib/schemas";
+import type { Client, Invoice, InvoiceItem } from "@/lib/schemas";
 
 export function InvoiceDetailPage({
   invoice,
   items,
+  clients,
 }: {
   invoice: Invoice;
   items: InvoiceItem[];
+  clients: Client[];
 }) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [markPaidOpen, setMarkPaidOpen] = React.useState(false);
-
-  const handleEdit = () => {
-    // TODO: open edit dialog or navigate to edit page
-    // For now, navigate back to invoice list
-    router.push("/dashboard/invoices");
-  };
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+  const [markingPaid, setMarkingPaid] = React.useState(false);
 
   const handleMarkPaid = async () => {
-    await updateInvoiceWithItems(invoice.id, { status: "paid" });
-    setMarkPaidOpen(false);
-    router.refresh();
+    setMarkingPaid(true);
+    try {
+      await updateInvoiceWithItems(invoice.id, { status: "paid" });
+      toast.success(`Invoice #${invoice.number} marked as paid`);
+      setMarkPaidOpen(false);
+      router.refresh();
+    } catch {
+      toast.error("Failed to mark invoice as paid");
+    } finally {
+      setMarkingPaid(false);
+    }
   };
 
   const handleDelete = async () => {
-    await deleteInvoice(invoice.id);
-    setDeleteOpen(false);
-    router.push("/dashboard/invoices");
+    setDeleting(true);
+    try {
+      await deleteInvoice(invoice.id);
+      toast.success(`Invoice #${invoice.number} deleted`);
+      setDeleteOpen(false);
+      router.push("/dashboard/invoices");
+    } catch {
+      toast.error("Failed to delete invoice");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <>
+      <nav className="mb-4 text-sm text-muted-foreground flex items-center gap-2">
+        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+        <ChevronRightIcon className="size-4" />
+        <Link href="/dashboard/invoices" className="hover:underline">Invoices</Link>
+        <ChevronRightIcon className="size-4" />
+        <span className="text-foreground">#{invoice.number}</span>
+      </nav>
       <InvoiceDetail
         invoice={invoice}
         items={items}
-        onEdit={handleEdit}
+        onEdit={() => setEditOpen(true)}
         onMarkPaid={() => setMarkPaidOpen(true)}
         onDelete={() => setDeleteOpen(true)}
       />
+
+      <InvoiceFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        invoice={invoice}
+        items={items.map((i) => ({
+          description: i.description,
+          quantity: i.quantity,
+          price: i.price,
+        }))}
+        clients={clients}
+      />
+
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent size="sm">
@@ -65,8 +104,8 @@ export function InvoiceDetailPage({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -83,8 +122,8 @@ export function InvoiceDetailPage({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkPaid}>
+            <AlertDialogCancel disabled={markingPaid}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkPaid} disabled={markingPaid}>
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

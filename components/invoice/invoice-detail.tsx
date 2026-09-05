@@ -58,7 +58,7 @@ export function InvoiceDetail({
         </CardDescription>
         <CardAction>
           <div className="flex items-center gap-2">
-            {onEdit ? (
+            {onEdit && invoice.status !== "paid" ? (
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <PencilIcon data-icon="inline-start" />
                 Edit
@@ -70,7 +70,7 @@ export function InvoiceDetail({
                 Mark as paid
               </Button>
             ) : null}
-            {onDelete ? (
+            {onDelete && invoice.status !== "paid" ? (
               <Button
                 variant="outline"
                 size="sm"

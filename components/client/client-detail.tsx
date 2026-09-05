@@ -1,6 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ChevronRightIcon } from "lucide-react";
 import {
   Card,
   CardAction,
@@ -24,8 +28,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { deleteClient } from "@/server/clients";
 import { formatDate, type Client, type Invoice } from "@/lib/schemas";
 
 export function ClientDetail({
@@ -35,12 +39,34 @@ export function ClientDetail({
   client: Client;
   invoices: Invoice[];
 }) {
+  const router = useRouter();
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [invoiceOpen, setInvoiceOpen] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteClient(client.id);
+      toast.success(`Client ${client.name} deleted`);
+      router.push("/dashboard/clients");
+    } catch {
+      toast.error("Failed to delete client");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
+      <nav className="text-sm text-muted-foreground flex items-center gap-2">
+        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+        <ChevronRightIcon className="size-4" />
+        <Link href="/dashboard/clients" className="hover:underline">Clients</Link>
+        <ChevronRightIcon className="size-4" />
+        <span className="text-foreground">{client.name}</span>
+      </nav>
       <Card>
         <CardHeader>
           <CardTitle>{client.name}</CardTitle>
@@ -57,33 +83,15 @@ export function ClientDetail({
                 <PencilIcon data-icon="inline-start" />
                 Edit
               </Button>
-              <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-                <AlertDialogTrigger
-                  render={
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive"
-                    />
-                  }
-                >
-                  <Trash2Icon data-icon="inline-start" />
-                  Delete
-                </AlertDialogTrigger>
-                <AlertDialogContent size="sm">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete client?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently remove {client.name} from your
-                      clients. Their invoices will be deleted as well.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction>Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2Icon data-icon="inline-start" />
+                Delete
+              </Button>
             </div>
           </CardAction>
         </CardHeader>
@@ -130,6 +138,24 @@ export function ClientDetail({
         onOpenChange={setEditOpen}
         client={client}
       />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete client?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove {client.name} from your
+              clients. Their invoices will be deleted as well.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

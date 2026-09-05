@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/field";
 import { clientFormSchema, type Client, type ClientFormValues } from "@/lib/schemas";
 import { createClient, updateClient } from "@/server/clients";
+import { toast } from "sonner";
 
 export function ClientFormDialog({
   open,
@@ -66,6 +67,14 @@ function ClientFormBody({
     Partial<Record<keyof ClientFormValues, string>>
   >({});
 
+  React.useEffect(() => {
+    const firstError = Object.keys(errors).find((k) => errors[k as keyof ClientFormValues]);
+    if (firstError) {
+      const el = document.getElementById(`client-${firstError}`);
+      el?.focus();
+    }
+  }, [errors]);
+
   const update = <K extends keyof ClientFormValues>(
     key: K,
     value: ClientFormValues[K],
@@ -106,9 +115,11 @@ function ClientFormBody({
         }
         return;
       }
+      toast.success(isEdit ? "Client updated" : "Client created");
       onClose();
     } catch {
       setSubmitError("Failed to save client");
+      toast.error("Failed to save client");
     } finally {
       setSaving(false);
     }
@@ -136,6 +147,7 @@ function ClientFormBody({
             <FieldLabel htmlFor="client-name">Name</FieldLabel>
             <Input
               id="client-name"
+              autoFocus
               value={values.name}
               onChange={(e) => update("name", e.target.value)}
               aria-invalid={Boolean(errors.name)}
@@ -175,6 +187,9 @@ function ClientFormBody({
               aria-invalid={Boolean(errors.address)}
               placeholder="100 Market St, San Francisco, CA"
             />
+            <div className="mt-1 text-xs text-muted-foreground">
+              {(values.address ?? "").length} / 255 characters
+            </div>
             {errors.address ? (
               <FieldError>{errors.address}</FieldError>
             ) : null}

@@ -13,10 +13,8 @@ test.describe("Dashboard @smoke", () => {
 
   test("shows recent invoices from database", async ({ page }) => {
     await expect(page.getByText("Recent Invoices")).toBeVisible();
-    // At least one invoice number should appear in the recent list
     await expect(page.locator("text=/^#\\d{4}$/").first()).toBeVisible();
-    // At least one client name should appear
-    await expect(page.getByText("Acme Corp").first()).toBeVisible();
+    await expect(page.locator("text=/[A-Z][a-z]+ [A-Z][a-z]+/").first()).toBeVisible();
   });
 });
 

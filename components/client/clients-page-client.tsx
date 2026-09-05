@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -21,21 +23,39 @@ import type { Client } from "@/lib/schemas";
 
 export function ClientsPageClient({ clients }: { clients: Client[] }) {
   const router = useRouter();
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const [editClient, setEditClient] = React.useState<Client | null>(null);
-  const [deleteTarget, setDeleteTarget] = React.useState<Client | null>(null);
+  const pathname = usePathname();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editClient, setEditClient] = useState<Client | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const createBtnRef = React.useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (refreshing) setRefreshing(false);
+  }, [pathname, clients]);
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
-    await deleteClient(deleteTarget.id);
-    setDeleteTarget(null);
-    router.refresh();
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    setRefreshing(true);
+    try {
+      await deleteClient(deleteTarget.id);
+      toast.success(`Client ${deleteTarget.name} deleted`);
+      setDeleteTarget(null);
+      router.refresh();
+    } catch {
+      toast.error("Failed to delete client");
+      setRefreshing(false);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end gap-2">
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" ref={createBtnRef} onClick={() => setCreateOpen(true)}>
           <PlusIcon data-icon="inline-start" />
           New Client
         </Button>
@@ -44,8 +64,12 @@ export function ClientsPageClient({ clients }: { clients: Client[] }) {
         clients={clients}
         onEdit={(client) => setEditClient(client)}
         onDelete={(client) => setDeleteTarget(client)}
+        isLoading={refreshing}
       />
-      <ClientFormDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <ClientFormDialog open={createOpen} onOpenChange={(open) => {
+        setCreateOpen(open);
+        if (!open) setTimeout(() => createBtnRef.current?.focus(), 0);
+      }} />
       {editClient ? (
         <ClientFormDialog
           open
@@ -70,8 +94,8 @@ export function ClientsPageClient({ clients }: { clients: Client[] }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
