@@ -10,7 +10,10 @@ import { eq, desc, asc, sql, and } from "drizzle-orm";
 
 export async function getInvoices({ page = 1, limit = 10, status, sortBy = "createdAt", sortDir = "desc" } = {} as { page?: number; limit?: number; status?: string; sortBy?: string; sortDir?: string }) {
   try {
-    const offset = (page - 1) * limit;
+    const allowedLimits = [10,20,30,50,100];
+    const safeLimit = allowedLimits.includes(limit) ? limit : 10;
+    const safePage = page > 0 ? page : 1;
+    const offset = (safePage - 1) * safeLimit;
     const where = status && status !== "all" ? eq(invoices.status, status as any) : undefined;
 
     const orderColumn =
@@ -38,7 +41,7 @@ export async function getInvoices({ page = 1, limit = 10, status, sortBy = "crea
         .innerJoin(clients, eq(invoices.clientId, clients.id))
         .where(where)
         .orderBy(order)
-        .limit(limit)
+        .limit(safeLimit)
         .offset(offset),
       db.select({ count: sql<number>`count(*)` }).from(invoices).innerJoin(clients, eq(invoices.clientId, clients.id)).where(where),
     ]);

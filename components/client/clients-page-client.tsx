@@ -2,9 +2,16 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +36,10 @@ import { ClientFormDialog } from "@/components/client/client-form-dialog";
 import { deleteClient } from "@/server/clients";
 import type { Client } from "@/lib/schemas";
 
-export function ClientsPageClient({ clients, total = 0, page = 1, sortBy = "name", sortDir = "asc" }: { clients: Client[]; total?: number; page?: number; sortBy?: string; sortDir?: string }) {
+export function ClientsPageClient({ clients, total = 0, page = 1, limit = 10, sortBy = "name", sortDir = "asc" }: { clients: Client[]; total?: number; page?: number; limit?: number; sortBy?: string; sortDir?: string }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
@@ -95,11 +103,31 @@ export function ClientsPageClient({ clients, total = 0, page = 1, sortBy = "name
             isLoading={refreshing}
           />
           <div className="flex items-center justify-between text-sm">
-            <div>Showing {clients.length} of {total} clients</div>
+            <div className="flex items-center gap-4">
+              <div>Showing {clients.length} of {total} clients</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs">Rows per page</span>
+                <Select value={String(limit)} onValueChange={(value) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (value) {
+                    params.set("limit", value);
+                    params.set("page", "1");
+                    router.replace(`${pathname}?${params.toString()}`);
+                  }
+                }}>
+                  <SelectTrigger className="h-8 w-[90px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10,20,30,50,100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { const params = new URLSearchParams(); params.set("page", String(page - 1)); router.replace(`${pathname}?${params.toString()}`); }}>Previous</Button>
-              <span>Page {page} of {Math.max(1, Math.ceil(total / 10))}</span>
-              <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / 10)} onClick={() => { const params = new URLSearchParams(); params.set("page", String(page + 1)); router.replace(`${pathname}?${params.toString()}`); }}>Next</Button>
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { const params = new URLSearchParams(searchParams.toString()); params.set("page", String(page - 1)); router.replace(`${pathname}?${params.toString()}`); }}>Previous</Button>
+              <span>Page {page} of {Math.max(1, Math.ceil(total / limit))}</span>
+              <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / limit)} onClick={() => { const params = new URLSearchParams(searchParams.toString()); params.set("page", String(page + 1)); router.replace(`${pathname}?${params.toString()}`); }}>Next</Button>
             </div>
           </div>
         </div>

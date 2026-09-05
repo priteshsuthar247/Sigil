@@ -181,6 +181,7 @@ export function InvoiceTable({
       getRowId={(row) => row.id}
       emptyState={emptyState}
       isLoading={isLoading}
+      hidePagination
     />
   );
 }

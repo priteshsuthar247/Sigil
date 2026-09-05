@@ -87,6 +87,11 @@ function InvoiceFormBody({
   const [clientId, setClientId] = React.useState<string>(
     invoice?.clientId ?? defaultClientId ?? "",
   );
+  const clientComboItems = React.useMemo(() => {
+    const items = clients.map(c => ({ value: c.id, label: c.name }));
+    // @ts-ignore - Base UI createItems exists on primitive
+    return Combobox.createItems ? Combobox.createItems(items, { getValue: (i: any) => i.value, getLabel: (i: any) => i.label }) : items;
+  }, [clients]);
   const [status, setStatus] = React.useState<InvoiceStatus>(
     invoice?.status ?? "sent",
   );
@@ -187,10 +192,7 @@ function InvoiceFormBody({
                 setClientId(v as string);
                 setError(null);
               }}
-              items={clients.map((c) => ({ value: c.id, label: c.name }))}
-              itemToStringLabel={(v) =>
-                clients.find((c) => c.id === v)?.name ?? ""
-              }
+              items={clientComboItems}
             >
               <ComboboxInput
                 autoFocus={!isEdit}

@@ -5,6 +5,13 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -39,6 +46,7 @@ export function InvoicesPageClient({
   clients,
   total = 0,
   page = 1,
+  limit = 10,
   status = "all",
   sortBy = "createdAt",
   sortDir = "desc",
@@ -47,6 +55,7 @@ export function InvoicesPageClient({
   clients: Client[];
   total?: number;
   page?: number;
+  limit?: number;
   status?: string;
   sortBy?: string;
   sortDir?: string;
@@ -144,11 +153,30 @@ export function InvoicesPageClient({
             isLoading={refreshing}
           />
           <div className="flex items-center justify-between text-sm">
-            <div>Showing {invoices.length} of {total} invoices</div>
+            <div className="flex items-center gap-4">
+              <div>Showing {invoices.length} of {total} invoices</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs">Rows per page</span>
+                <Select value={String(limit)} onValueChange={(value) => {
+                  if (!value) return;
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set("limit", value);
+                  params.set("page", "1");
+                  router.replace(`${pathname}?${params.toString()}`);
+                }}>
+                  <SelectTrigger className="h-8 w-[90px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10,20,30,50,100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { const params = new URLSearchParams(searchParams.toString()); params.set("page", String(page - 1)); router.replace(`${pathname}?${params.toString()}`); }}>Previous</Button>
-              <span>Page {page} of {Math.max(1, Math.ceil(total / 10))}</span>
-              <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / 10)} onClick={() => { const params = new URLSearchParams(searchParams.toString()); params.set("page", String(page + 1)); router.replace(`${pathname}?${params.toString()}`); }}>Next</Button>
+              <span>Page {page} of {Math.max(1, Math.ceil(total / limit))}</span>
+              <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / limit)} onClick={() => { const params = new URLSearchParams(searchParams.toString()); params.set("page", String(page + 1)); router.replace(`${pathname}?${params.toString()}`); }}>Next</Button>
             </div>
           </div>
         </div>

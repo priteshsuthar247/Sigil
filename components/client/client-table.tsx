@@ -157,6 +157,7 @@ export function ClientTable({
       getRowId={(row) => row.id}
       emptyState={emptyState}
       isLoading={isLoading}
+      hidePagination
     />
   );
 }

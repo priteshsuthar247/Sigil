@@ -5,14 +5,17 @@ import { createClientSchema, clientUpdateSchema } from "@/db/validators";
 import { clients } from "@/db/schema";
 import { eq, asc, desc, sql } from "drizzle-orm";
 
-export async function getClients({ page = 1, limit = 10, sortBy = "name", sortDir = "asc" } = {}) {
+export async function getClients({ page = 1, limit = 10, sortBy = "name", sortDir = "asc" } = {} as { page?: number; limit?: number; sortBy?: string; sortDir?: string }) {
   try {
-    const offset = (page - 1) * limit;
+    const allowedLimits = [10,20,30,50,100];
+    const safeLimit = allowedLimits.includes(limit) ? limit : 10;
+    const safePage = page > 0 ? page : 1;
+    const offset = (safePage - 1) * safeLimit;
     const orderColumn = sortBy === "email" ? clients.email : sortBy === "createdAt" ? clients.createdAt : clients.name;
     const order = sortDir === "asc" ? asc(orderColumn) : desc(orderColumn);
 
     const [clientsList, [{ count }]] = await Promise.all([
-      db.select().from(clients).orderBy(order).limit(limit).offset(offset),
+      db.select().from(clients).orderBy(order).limit(safeLimit).offset(offset),
       db.select({ count: sql<number>`count(*)` }).from(clients),
     ]);
     return { data: clientsList, total: Number(count) };
