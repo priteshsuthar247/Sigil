@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/neon-http";
-import { users, clients, invoices, invoiceItems } from "./schema";
+import { users, clients, invoices, invoiceItems, companyProfiles } from "./schema";
 import bcrypt from "bcryptjs";
 
 async function seed() {
@@ -11,6 +11,7 @@ async function seed() {
   await db.delete(invoiceItems);
   await db.delete(invoices);
   await db.delete(clients);
+  await db.delete(companyProfiles);
   await db.delete(users);
 
   // Create user
@@ -24,6 +25,19 @@ async function seed() {
     })
     .returning();
   console.log(`Created user: ${user.name} (${user.id})`);
+
+  // Create company profile
+  await db.insert(companyProfiles).values({
+    userId: user.id,
+    companyName: "It Works on My Machine Global Architecture",
+    companyAddress: "Room 404, The NullPointerException Building, Sector 0, Silicon Slums, 500081",
+    companyEmail: "help@itworksonmymachineglobalarchitecture.com",
+    companyPhone: "+1 (555) 404-0101",
+    paymentTerms: "Net 30, Bank Transfer / UPI",
+    gstin: "24AAAAA0000A1Z5",
+    notes: "Payment is due within 15 days of invoice issuance via wire transfer or UPI. Scope changes will be handled through a formal change request process and billed at our standard hourly rate. All deliverables come with a 30-day bug-fix warranty post-deployment.",
+  });
+  console.log(`Created company profile for user`);
 
   // Create clients
   const insertedClients = await db

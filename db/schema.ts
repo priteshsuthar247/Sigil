@@ -17,6 +17,22 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const companyProfiles = pgTable("company_profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  companyName: text("company_name").notNull(),
+  companyAddress: text("company_address").notNull(),
+  companyEmail: text("company_email").notNull(),
+  companyPhone: text("company_phone").notNull(),
+  paymentTerms: text("payment_terms").notNull(),
+  gstin: text("gstin").notNull(),
+  notes: text("notes").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const clients = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
@@ -61,3 +77,5 @@ export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
 export type InvoiceItem = typeof invoiceItems.$inferSelect;
 export type NewInvoiceItem = typeof invoiceItems.$inferInsert;
+export type CompanyProfile = typeof companyProfiles.$inferSelect;
+export type NewCompanyProfile = typeof companyProfiles.$inferInsert;

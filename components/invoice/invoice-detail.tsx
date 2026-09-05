@@ -18,7 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PencilIcon, CheckCircle2Icon, Trash2Icon } from "lucide-react";
+import {
+  PencilIcon, CheckCircle2Icon, Trash2Icon
+} from "lucide-react";
+import { PdfClientDownloadButton } from "@/components/pdf/pdf-client";
 import { InvoiceStatusBadge } from "@/components/invoice/invoice-status-badge";
 import {
   formatCurrency,
@@ -58,6 +61,7 @@ export function InvoiceDetail({
         </CardDescription>
         <CardAction>
           <div className="flex items-center gap-2">
+            <PdfClientDownloadButton invoiceId={invoice.id} invoiceNumber={String(invoice.number)} />
             {onEdit && invoice.status !== "paid" ? (
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <PencilIcon data-icon="inline-start" />

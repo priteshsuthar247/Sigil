@@ -21,6 +21,7 @@ import {
   EllipsisVerticalIcon,
   LogOutIcon,
   CircleUserRoundIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -85,9 +86,16 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/dashboard/settings")}>
+                <SettingsIcon />
+                Settings
+            </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/dashboard/account")}>
                 <CircleUserRoundIcon />
                 Account
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/dashboard/settings/business-profile")}>
+                Business Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer" onClick={() => signOut({ callbackUrl: "/login" })}>
