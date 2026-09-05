@@ -8,7 +8,7 @@ export default async function AccountPage() {
   if (result.error) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-bold">Account</h1>
+        <h2 className="text-2xl font-bold">Account</h2>
         <p>Unauthorized</p>
       </div>
     );
@@ -22,7 +22,7 @@ export default async function AccountPage() {
         { label: "Account" }
       ]} />
       <div>
-        <h1 className="text-2xl font-bold">Account</h1>
+        <h2 className="text-2xl font-bold">Account</h2>
         <p className="text-sm text-muted-foreground">Manage your profile and password</p>
       </div>
       <Card>

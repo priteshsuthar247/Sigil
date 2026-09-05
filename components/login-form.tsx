@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";

@@ -76,10 +76,9 @@ export function InvoiceDetail({
             ) : null}
             {onDelete && invoice.status !== "paid" ? (
               <Button
-                variant="outline"
+                variant="destructive"
                 size="sm"
                 onClick={onDelete}
-                className="text-destructive"
               >
                 <Trash2Icon data-icon="inline-start" />
                 Delete

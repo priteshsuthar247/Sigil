@@ -17,7 +17,7 @@ export default async function BusinessProfilePage() {
         { label: "Business Profile" }
       ]} />
       <div>
-        <h1 className="text-2xl font-bold">Business Profile</h1>
+        <h2 className="text-2xl font-bold">Business Profile</h2>
         <p className="text-sm text-muted-foreground">Company details used on invoices</p>
       </div>
       <BusinessProfileForm initialData={profile} />

@@ -217,13 +217,13 @@ function InvoiceFormBody({
 
           <div className="grid grid-cols-2 gap-4">
             <Field>
-              <FieldLabel>Mark as paid</FieldLabel>
+              <FieldLabel id="mark-as-paid-label">Mark as paid</FieldLabel>
               <div className="flex items-center gap-2">
                 <Switch
                   checked={status === "paid"}
                   onCheckedChange={(checked) => setStatus(checked ? "paid" : "sent")}
                   disabled={saving}
-                  aria-label="Mark as paid"
+                  aria-labelledby="mark-as-paid-label"
                 />
                 <span className="text-sm text-muted-foreground">
                   {status === "paid" ? "Paid" : "Sent"}

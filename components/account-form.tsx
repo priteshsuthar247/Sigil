@@ -83,8 +83,8 @@ export function AccountForm({ user }: { user: User }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <FieldGroup>
         <Field>
-          <FieldLabel>Email</FieldLabel>
-          <Input value={user.email} disabled />
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <Input id="email" value={user.email} disabled />
         </Field>
         <Field data-invalid={!!fieldErrors.name}>
           <FieldLabel htmlFor="name">Name</FieldLabel>

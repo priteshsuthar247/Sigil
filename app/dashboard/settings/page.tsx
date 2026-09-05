@@ -11,7 +11,7 @@ export default function SettingsPage() {
         { label: "Settings" }
       ]} />
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
+        <h2 className="text-2xl font-bold">Settings</h2>
         <p className="text-sm text-muted-foreground">Manage your account and business preferences</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">

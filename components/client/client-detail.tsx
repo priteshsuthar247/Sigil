@@ -81,9 +81,8 @@ export function ClientDetail({
                 Edit
               </Button>
               <Button
-                variant="outline"
+                variant="destructive"
                 size="sm"
-                className="text-destructive"
                 onClick={() => setDeleteOpen(true)}
               >
                 <Trash2Icon data-icon="inline-start" />

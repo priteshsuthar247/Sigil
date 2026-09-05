@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 export default function Loading() {
   return (
     <div className="flex flex-col gap-4">
+      <Skeleton className="h-5 w-48" />
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
           <div className="flex flex-col gap-2">

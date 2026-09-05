@@ -6,6 +6,8 @@ import { getInvoices } from "@/server/invoices";
 import { getClients } from "@/server/clients";
 import { formatCurrency } from "@/lib/schemas";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Page() {
   const [invoicesResult, clientsResult] = await Promise.all([
     getInvoices(),

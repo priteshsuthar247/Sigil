@@ -26,6 +26,7 @@ import {
 import { PlusIcon, ReceiptIcon, SearchIcon, XIcon } from "lucide-react";
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -143,7 +144,7 @@ export function InvoicesPageClient({
   }, [pathname, router, searchParams, sortBy, sortDir]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <AppBreadcrumb items={[
         { label: "Dashboard", href: "/dashboard" },
         { label: "Invoices" }
@@ -156,13 +157,13 @@ export function InvoicesPageClient({
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); } }}
-              className="w-[220px] h-8"
+              className="w-[220px]"
             />
-            <Button size="sm" variant="outline" onClick={() => { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
+            <Button size="sm" variant="outline" aria-label="Search" onClick={() => { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
               <SearchIcon className="h-4 w-4" />
             </Button>
             {searchValue && (
-              <Button size="sm" variant="ghost" onClick={() => { setSearchValue(""); const params = new URLSearchParams(searchParams.toString()); params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
+              <Button size="sm" variant="ghost" aria-label="Clear search" onClick={() => { setSearchValue(""); const params = new URLSearchParams(searchParams.toString()); params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
                 <XIcon className="h-4 w-4" />
               </Button>
             )}
@@ -198,6 +199,14 @@ export function InvoicesPageClient({
                 : `Switch to “All” or create a ${status} invoice.`}
             </EmptyDescription>
           </EmptyHeader>
+          {status === "all" && (
+            <EmptyContent>
+              <Button size="sm" onClick={() => setCreateOpen(true)}>
+                <PlusIcon data-icon="inline-start" />
+                New Invoice
+              </Button>
+            </EmptyContent>
+          )}
         </Empty>
       ) : (
         <div className="flex flex-col gap-4">
@@ -223,7 +232,7 @@ export function InvoicesPageClient({
                   params.set("page", "1");
                   router.replace(`${pathname}?${params.toString()}`);
                 }}>
-                  <SelectTrigger className="h-8 w-[90px]">
+                  <SelectTrigger className="w-[90px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

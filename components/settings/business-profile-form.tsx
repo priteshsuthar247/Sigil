@@ -103,7 +103,7 @@ export function BusinessProfileForm({ initialData }: { initialData: any }) {
               {errors.currentPassword && <FieldError>{errors.currentPassword.message}</FieldError>}
             </Field>
           </FieldGroup>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <div role="alert" className="text-sm text-destructive">{error}</div>}
           <Button type="submit" disabled={pending}>{pending ? "Saving..." : "Save changes"}</Button>
         </form>
       </CardContent>
