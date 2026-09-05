@@ -101,14 +101,14 @@ export function ClientsPageClient({ clients, total = 0, page = 1, limit = 10, so
         { label: "Dashboard", href: "/dashboard" },
         { label: "Clients" }
       ]} />
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
           <Input
             placeholder="Search name or email"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); } }}
-            className="w-[220px]"
+            className="w-full sm:w-[220px]"
           />
           <Button size="sm" variant="outline" aria-label="Search" onClick={() => { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
             <SearchIcon className="h-4 w-4" />
@@ -124,7 +124,7 @@ export function ClientsPageClient({ clients, total = 0, page = 1, limit = 10, so
             </Button>
           )}
         </div>
-        <Button size="sm" ref={createBtnRef} onClick={() => setCreateOpen(true)}>
+        <Button size="sm" ref={createBtnRef} className="w-full sm:w-auto" onClick={() => setCreateOpen(true)}>
           <PlusIcon data-icon="inline-start" />
           New Client
         </Button>
@@ -153,6 +153,7 @@ export function ClientsPageClient({ clients, total = 0, page = 1, limit = 10, so
             clients={clients}
             onEdit={(client) => setEditClient(client)}
             onDelete={(client) => setDeleteTarget(client)}
+            onCreateInvoice={(clientId) => router.push(`/dashboard/invoices/new?clientId=${clientId}`)}
             isLoading={refreshing}
             onSort={handleSort}
             sortBy={sortBy}

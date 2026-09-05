@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 type NavItem = {
@@ -18,6 +19,12 @@ type NavItem = {
 };
 
 export function NavMain({ items }: { items: NavItem[] }) {
+  const { setOpenMobile } = useSidebar();
+  
+  const handleNav = () => {
+    setOpenMobile(false);
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -27,7 +34,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
               <SidebarMenuButton
                 tooltip={item.title}
                 isActive={item.active}
-                render={<Link href={item.url} />}
+                render={<Link href={item.url} onClick={handleNav} />}
               >
                 {item.icon}
                 <span>{item.title}</span>

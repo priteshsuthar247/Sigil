@@ -34,8 +34,13 @@ export function NavUser({
     avatar: string;
   };
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const router = useRouter();
+  
+  const handleNav = (path: string) => {
+    setOpenMobile(false);
+    router.push(path);
+  };
   const initials = user.name
     .split(" ")
     .map((n) => n[0])
@@ -86,11 +91,11 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/dashboard/settings")}>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => handleNav("/dashboard/settings")}>
                 <SettingsIcon />
                 Settings
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/dashboard/account")}>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => handleNav("/dashboard/account")}>
                 <CircleUserRoundIcon />
                 Account
             </DropdownMenuItem>

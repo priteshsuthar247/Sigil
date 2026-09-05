@@ -24,6 +24,7 @@ import {
 import { EllipsisVerticalIcon, UsersIcon } from "lucide-react";
 import { formatDate, type Client } from "@/lib/schemas";
 import type { ColumnDef } from "@tanstack/react-table";
+import { ClientMobileCards } from "./client-mobile-cards";
 
 const columnHelper = createTableColumnHelper<Client>();
 
@@ -146,6 +147,7 @@ export function ClientTable({
   onSort,
   sortBy,
   sortDir,
+  onCreateInvoice,
 }: {
   clients: Client[];
   onEdit: (client: Client) => void;
@@ -154,20 +156,26 @@ export function ClientTable({
   onSort?: (columnId: string) => void;
   sortBy?: string;
   sortDir?: string;
+  onCreateInvoice?: (clientId: string) => void;
 }) {
   const columns = useColumns({ onEdit, onDelete });
   return (
-    <DataTable
-      data={clients}
-      columns={columns}
-      getRowId={(row) => row.id}
-      emptyState={emptyState}
-      isLoading={isLoading}
-      hidePagination
-      onSort={onSort}
-      initialPageSize={clients.length || 10}
-      sortBy={sortBy}
-      sortDir={sortDir}
-    />
+    <>
+      <div className="hidden md:block">
+        <DataTable
+          data={clients}
+          columns={columns}
+          getRowId={(row) => row.id}
+          emptyState={emptyState}
+          isLoading={isLoading}
+          hidePagination
+          onSort={onSort}
+          initialPageSize={clients.length || 10}
+          sortBy={sortBy}
+          sortDir={sortDir}
+        />
+      </div>
+      <ClientMobileCards clients={clients} onEdit={onEdit} onDelete={onDelete} onCreateInvoice={onCreateInvoice} />
+    </>
   );
 }

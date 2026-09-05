@@ -149,15 +149,15 @@ export function InvoicesPageClient({
         { label: "Dashboard", href: "/dashboard" },
         { label: "Invoices" }
       ]} />
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Input
               placeholder="Search # or client"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); } }}
-              className="w-[220px]"
+              className="w-full sm:w-[220px]"
             />
             <Button size="sm" variant="outline" aria-label="Search" onClick={() => { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
               <SearchIcon className="h-4 w-4" />
@@ -175,7 +175,7 @@ export function InvoicesPageClient({
             </Button>
           )}
         </div>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" className="w-full sm:w-auto" onClick={() => setCreateOpen(true)}>
           <PlusIcon data-icon="inline-start" />
           New Invoice
         </Button>

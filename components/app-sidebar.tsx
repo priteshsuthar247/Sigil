@@ -16,6 +16,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 const navItems = [
@@ -39,6 +40,7 @@ const navItems = [
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const { setOpenMobile } = useSidebar();
 
   const user = {
     name: status === "loading" ? "Loading..." : session?.user?.name ?? "User",
@@ -66,7 +68,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               className="data-[slot=sidebar-menu-button]:p-1.5!"
-              render={<Link href="/dashboard" />}
+              render={<Link href="/dashboard" onClick={() => setOpenMobile(false)} />}
             >
               <CommandIcon className="size-5!" />
               <span className="text-base font-semibold">Invoicing</span>

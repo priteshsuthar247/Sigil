@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/empty";
 import { EllipsisVerticalIcon, ReceiptIcon } from "lucide-react";
 import { formatCurrency, formatDate, type Invoice } from "@/lib/schemas";
+import { InvoiceMobileCards } from "./invoice-mobile-cards";
 
 const columnHelper = createTableColumnHelper<Invoice>();
 
@@ -181,17 +182,22 @@ export function InvoiceTable({
 }) {
   const columns = useColumns({ onEdit, onMarkPaid, onDelete });
   return (
-    <DataTable
-      data={invoices}
-      columns={columns}
-      getRowId={(row) => row.id}
-      emptyState={emptyState}
-      isLoading={isLoading}
-      hidePagination
-      onSort={onSort}
-      initialPageSize={invoices.length || 10}
-      sortBy={sortBy}
-      sortDir={sortDir}
-    />
+    <>
+      <div className="hidden md:block">
+        <DataTable
+          data={invoices}
+          columns={columns}
+          getRowId={(row) => row.id}
+          emptyState={emptyState}
+          isLoading={isLoading}
+          hidePagination
+          onSort={onSort}
+          initialPageSize={invoices.length || 10}
+          sortBy={sortBy}
+          sortDir={sortDir}
+        />
+      </div>
+      <InvoiceMobileCards invoices={invoices} onEdit={onEdit} onMarkPaid={onMarkPaid} onDelete={onDelete} />
+    </>
   );
 }
