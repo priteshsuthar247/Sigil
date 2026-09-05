@@ -2,16 +2,17 @@ import { getInvoices } from "@/server/invoices";
 import { getClients } from "@/server/clients";
 import { InvoicesPageClient } from "@/components/invoice/invoices-page-client";
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string; status?: string; sortBy?: string; sortDir?: string; limit?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string; status?: string; sortBy?: string; sortDir?: string; limit?: string; q?: string }> }) {
   const params = await searchParams;
   const page = Number(params.page ?? "1");
   const status = params.status ?? "all";
   const sortBy = params.sortBy ?? "createdAt";
   const sortDir = params.sortDir ?? "desc";
   const limit = Number(params.limit ?? "10");
+  const q = params.q ?? "";
 
   const [invoicesResult, clientsResult] = await Promise.all([
-    getInvoices({ page, limit, status, sortBy, sortDir }),
+    getInvoices({ page, limit, status, sortBy, sortDir, q }),
     getClients({ page: 1, limit: 1000 }),
   ]);
 

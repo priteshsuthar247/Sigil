@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   DataTable,
@@ -36,7 +36,7 @@ function useColumns({
   onMarkPaid?: (invoice: Invoice) => void;
   onDelete?: (invoice: Invoice) => void;
 }) {
-  return React.useMemo(() => [
+  return useMemo(() => [
     columnHelper.accessor("number", {
       header: "Invoice #",
       cell: ({ row }) => (
@@ -126,7 +126,7 @@ function useColumns({
                       Mark as paid
                     </DropdownMenuItem>
                   )}
-                  {(onDelete || onEdit || onMarkPaid) && (
+                  {((onDelete && row.original.status !== "paid") || (onEdit && row.original.status !== "paid") || (onMarkPaid && row.original.status !== "paid")) && (
                     <DropdownMenuSeparator />
                   )}
                   {onDelete && row.original.status !== "paid" && (
@@ -166,12 +166,18 @@ export function InvoiceTable({
   onMarkPaid,
   onDelete,
   isLoading = false,
+  onSort,
+  sortBy,
+  sortDir,
 }: {
   invoices: Invoice[];
   onEdit?: (invoice: Invoice) => void;
   onMarkPaid?: (invoice: Invoice) => void;
   onDelete?: (invoice: Invoice) => void;
   isLoading?: boolean;
+  onSort?: (columnId: string) => void;
+  sortBy?: string;
+  sortDir?: string;
 }) {
   const columns = useColumns({ onEdit, onMarkPaid, onDelete });
   return (
@@ -182,6 +188,10 @@ export function InvoiceTable({
       emptyState={emptyState}
       isLoading={isLoading}
       hidePagination
+      onSort={onSort}
+      initialPageSize={invoices.length || 10}
+      sortBy={sortBy}
+      sortDir={sortDir}
     />
   );
 }

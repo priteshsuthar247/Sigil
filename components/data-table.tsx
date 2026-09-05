@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   columnFilteringFeature,
   columnVisibilityFeature,
@@ -44,6 +44,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsRightIcon,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 
 export const features = tableFeatures({
@@ -64,10 +67,13 @@ type DataTableProps<T extends RowData> = {
   data: T[];
   columns: ColumnDef<typeof features, T>[];
   getRowId: (row: T, index: number) => string;
-  emptyState?: React.ReactNode;
+  emptyState?: ReactNode;
   initialPageSize?: number;
   isLoading?: boolean;
   hidePagination?: boolean;
+  onSort?: (columnId: string) => void;
+  sortBy?: string;
+  sortDir?: string;
 };
 
 export function DataTable<T extends RowData>({
@@ -78,21 +84,28 @@ export function DataTable<T extends RowData>({
   initialPageSize = 10,
   isLoading = false,
   hidePagination = false,
+  onSort,
+  sortBy,
+  sortDir,
 }: DataTableProps<T>) {
-  const [data, setData] = React.useState(() => initialData);
-  React.useEffect(() => {
+  const [data, setData] = useState(() => initialData);
+  useEffect(() => {
     setData(initialData);
   }, [initialData]);
   const [columnVisibility, setColumnVisibility] =
-    React.useState<ColumnVisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    useState<ColumnVisibilityState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
     [],
   );
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [pagination, setPagination] = React.useState({
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: initialPageSize,
   });
+
+  useEffect(() => {
+    setPagination(p => ({ ...p, pageSize: initialPageSize }));
+  }, [initialPageSize]);
 
   const table = useTable({
     features,
@@ -119,10 +132,40 @@ export function DataTable<T extends RowData>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort();
+                  const isSorted = onSort && canSort && sortBy === header.column.id;
+                  const isAsc = isSorted && sortDir === "asc";
+                  const ariaSort = isSorted ? (sortDir === "asc" ? "ascending" : "descending") : "none";
                   return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      aria-sort={ariaSort}
+                      className={isSorted ? "bg-muted/60" : undefined}
+                    >
                       {header.isPlaceholder ? null : (
-                        <FlexRender header={header} />
+                        <div
+                          className={onSort && canSort ? "cursor-pointer select-none flex items-center gap-1" : undefined}
+                          onClick={() => onSort && canSort && onSort(header.column.id)}
+                          role={onSort && canSort ? "button" : undefined}
+                          tabIndex={onSort && canSort ? 0 : undefined}
+                          onKeyDown={(e) => {
+                            if (onSort && canSort && (e.key === "Enter" || e.key === " ")) {
+                              e.preventDefault();
+                              onSort(header.column.id);
+                            }
+                          }}
+                          aria-sort={onSort && canSort ? (isSorted ? (sortDir === "asc" ? "ascending" : "descending") : "none") : undefined}
+                        >
+                          <FlexRender header={header} />
+                          {onSort && canSort && (
+                            isSorted ? (
+                              isAsc ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-40" />
+                            )
+                          )}
+                        </div>
                       )}
                     </TableHead>
                   );

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -30,11 +30,11 @@ export function InvoiceDetailPage({
   clients: Client[];
 }) {
   const router = useRouter();
-  const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [markPaidOpen, setMarkPaidOpen] = React.useState(false);
-  const [editOpen, setEditOpen] = React.useState(false);
-  const [deleting, setDeleting] = React.useState(false);
-  const [markingPaid, setMarkingPaid] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [markPaidOpen, setMarkPaidOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
 
   const handleMarkPaid = async () => {
     setMarkingPaid(true);

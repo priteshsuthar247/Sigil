@@ -3,9 +3,9 @@ import { db } from "@/db/drizzle";
 import { revalidatePath } from "next/cache";
 import { createClientSchema, clientUpdateSchema } from "@/db/validators";
 import { clients } from "@/db/schema";
-import { eq, asc, desc, sql } from "drizzle-orm";
+import { eq, asc, desc, sql, and, or, ilike } from "drizzle-orm";
 
-export async function getClients({ page = 1, limit = 10, sortBy = "name", sortDir = "asc" } = {} as { page?: number; limit?: number; sortBy?: string; sortDir?: string }) {
+export async function getClients({ page = 1, limit = 10, sortBy = "name", sortDir = "asc", q } = {} as { page?: number; limit?: number; sortBy?: string; sortDir?: string; q?: string }) {
   try {
     const allowedLimits = [10,20,30,50,100];
     const safeLimit = allowedLimits.includes(limit) ? limit : 10;
@@ -14,9 +14,16 @@ export async function getClients({ page = 1, limit = 10, sortBy = "name", sortDi
     const orderColumn = sortBy === "email" ? clients.email : sortBy === "createdAt" ? clients.createdAt : clients.name;
     const order = sortDir === "asc" ? asc(orderColumn) : desc(orderColumn);
 
+    const conditions = [];
+    if (q && q.trim() !== "") {
+      const search = `%${q.trim()}%`;
+      conditions.push(or(ilike(clients.name, search), ilike(clients.email, search)));
+    }
+    const where = conditions.length ? and(...conditions) : undefined;
+
     const [clientsList, [{ count }]] = await Promise.all([
-      db.select().from(clients).orderBy(order).limit(safeLimit).offset(offset),
-      db.select({ count: sql<number>`count(*)` }).from(clients),
+      db.select().from(clients).where(where).orderBy(order).limit(safeLimit).offset(offset),
+      db.select({ count: sql<number>`count(*)` }).from(clients).where(where),
     ]);
     return { data: clientsList, total: Number(count) };
   } catch (error) {

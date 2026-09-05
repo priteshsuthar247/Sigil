@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   DataTable,
@@ -34,7 +34,7 @@ function useColumns({
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
 }) {
-  return React.useMemo(
+  return useMemo(
     () =>
       columnHelper.columns([
         columnHelper.accessor("name", {
@@ -143,11 +143,17 @@ export function ClientTable({
   onEdit,
   onDelete,
   isLoading = false,
+  onSort,
+  sortBy,
+  sortDir,
 }: {
   clients: Client[];
   onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
   isLoading?: boolean;
+  onSort?: (columnId: string) => void;
+  sortBy?: string;
+  sortDir?: string;
 }) {
   const columns = useColumns({ onEdit, onDelete });
   return (
@@ -158,6 +164,10 @@ export function ClientTable({
       emptyState={emptyState}
       isLoading={isLoading}
       hidePagination
+      onSort={onSort}
+      initialPageSize={clients.length || 10}
+      sortBy={sortBy}
+      sortDir={sortDir}
     />
   );
 }

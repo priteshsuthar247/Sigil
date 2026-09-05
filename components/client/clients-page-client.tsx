@@ -1,10 +1,10 @@
 "use client";
 
-import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusIcon, UserIcon } from "lucide-react";
+import { PlusIcon, UserIcon, SearchIcon, XIcon } from "lucide-react";
 import {
   Empty,
   EmptyContent,
@@ -45,7 +45,12 @@ export function ClientsPageClient({ clients, total = 0, page = 1, limit = 10, so
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const createBtnRef = React.useRef<HTMLButtonElement>(null);
+  const createBtnRef = useRef<HTMLButtonElement>(null);
+  const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
+
+  useEffect(() => {
+    setSearchValue(searchParams.get("q") ?? "");
+  }, [searchParams]);
 
   useEffect(() => {
     if (refreshing) setRefreshing(false);
@@ -68,9 +73,52 @@ export function ClientsPageClient({ clients, total = 0, page = 1, limit = 10, so
     }
   };
 
+  const handleSort = (columnId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const currentSortBy = params.get("sortBy");
+    const currentSortDir = params.get("sortDir");
+    if (currentSortBy === columnId) {
+      if (currentSortDir === "asc") {
+        params.set("sortDir", "desc");
+      } else if (currentSortDir === "desc") {
+        params.delete("sortBy");
+        params.delete("sortDir");
+      } else {
+        params.set("sortDir", "asc");
+      }
+    } else {
+      params.set("sortBy", columnId);
+      params.set("sortDir", "asc");
+    }
+    params.set("page", "1");
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search name or email"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); } }}
+            className="w-[220px] h-8"
+          />
+          <Button size="sm" variant="outline" onClick={() => { const params = new URLSearchParams(searchParams.toString()); if (searchValue.trim()) params.set("q", searchValue.trim()); else params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
+            <SearchIcon className="h-4 w-4" />
+          </Button>
+          {searchValue && (
+            <Button size="sm" variant="ghost" onClick={() => { setSearchValue(""); const params = new URLSearchParams(searchParams.toString()); params.delete("q"); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }}>
+              <XIcon className="h-4 w-4" />
+            </Button>
+          )}
+          {(searchParams.get("q") || searchParams.get("sortBy") || searchParams.get("sortDir")) && (
+            <Button size="sm" variant="ghost" onClick={() => { const params = new URLSearchParams(); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); setSearchValue(""); }}>
+              Clear
+            </Button>
+          )}
+        </div>
         <Button size="sm" ref={createBtnRef} onClick={() => setCreateOpen(true)}>
           <PlusIcon data-icon="inline-start" />
           New Client
@@ -101,6 +149,9 @@ export function ClientsPageClient({ clients, total = 0, page = 1, limit = 10, so
             onEdit={(client) => setEditClient(client)}
             onDelete={(client) => setDeleteTarget(client)}
             isLoading={refreshing}
+            onSort={handleSort}
+            sortBy={sortBy}
+            sortDir={sortDir}
           />
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">

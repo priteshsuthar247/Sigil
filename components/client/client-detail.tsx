@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -40,10 +40,10 @@ export function ClientDetail({
   invoices: Invoice[];
 }) {
   const router = useRouter();
-  const [editOpen, setEditOpen] = React.useState(false);
-  const [deleteOpen, setDeleteOpen] = React.useState(false);
-  const [invoiceOpen, setInvoiceOpen] = React.useState(false);
-  const [deleting, setDeleting] = React.useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogClose,
@@ -81,21 +81,22 @@ function InvoiceFormBody({
   onClose: () => void;
 }) {
   const isEdit = Boolean(invoice);
-  const [saving, setSaving] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [clientId, setClientId] = React.useState<string>(
+  const [clientId, setClientId] = useState<string>(
     invoice?.clientId ?? defaultClientId ?? "",
   );
-  const clientComboItems = React.useMemo(() => {
-    const items = clients.map(c => ({ value: c.id, label: c.name }));
-    // @ts-ignore - Base UI createItems exists on primitive
-    return Combobox.createItems ? Combobox.createItems(items, { getValue: (i: any) => i.value, getLabel: (i: any) => i.label }) : items;
+  const clientItems = useMemo(() => {
+    return clients;
   }, [clients]);
-  const [status, setStatus] = React.useState<InvoiceStatus>(
+  const selectedClient = useMemo(() => {
+    return clients.find(c => c.id === clientId) ?? null;
+  }, [clients, clientId]);
+  const [status, setStatus] = useState<InvoiceStatus>(
     invoice?.status ?? "sent",
   );
-  const [itemRows, setItemRows] = React.useState<InvoiceItemRow[]>(() => {
+  const [itemRows, setItemRows] = useState<InvoiceItemRow[]>(() => {
     if (isEdit && items && items.length > 0) {
       return items.map((i, idx) => ({
         id: `edit-${idx}-${Math.random().toString(36).slice(2)}`,
@@ -187,12 +188,13 @@ function InvoiceFormBody({
           <Field>
             <FieldLabel>Client</FieldLabel>
             <Combobox
-              value={clientId}
+              value={selectedClient}
               onValueChange={(v) => {
-                setClientId(v as string);
+                setClientId((v as Client)?.id ?? "");
                 setError(null);
               }}
-              items={clientComboItems}
+              items={clientItems}
+              itemToStringLabel={(item) => (item as Client)?.name ?? ""}
             >
               <ComboboxInput
                 autoFocus={!isEdit}
@@ -203,9 +205,9 @@ function InvoiceFormBody({
               />
               <ComboboxContent>
                 <ComboboxList>
-                  {(item: { value: string; label: string }) => (
-                    <ComboboxItem key={item.value} value={item.value}>
-                      {item.label}
+                  {(item: Client) => (
+                    <ComboboxItem key={item.id} value={item}>
+                      {item.name}
                     </ComboboxItem>
                   )}
                 </ComboboxList>

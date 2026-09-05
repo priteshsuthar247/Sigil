@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type { ComponentProps } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboardIcon, UsersIcon, ReceiptIcon, CommandIcon } from "lucide-react";
@@ -41,7 +41,7 @@ const navItems = [
   },
 ];
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
 
   const items = navItems.map((item) => {

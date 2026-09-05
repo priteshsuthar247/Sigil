@@ -6,15 +6,21 @@ import {
   updateInvoiceWithItemsSchema,
 } from "@/db/validators";
 import { invoices, invoiceItems, clients, invoiceStatus, users } from "@/db/schema";
-import { eq, desc, asc, sql, and } from "drizzle-orm";
+import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
 
-export async function getInvoices({ page = 1, limit = 10, status, sortBy = "createdAt", sortDir = "desc" } = {} as { page?: number; limit?: number; status?: string; sortBy?: string; sortDir?: string }) {
+export async function getInvoices({ page = 1, limit = 10, status, sortBy = "createdAt", sortDir = "desc", q } = {} as { page?: number; limit?: number; status?: string; sortBy?: string; sortDir?: string; q?: string }) {
   try {
     const allowedLimits = [10,20,30,50,100];
     const safeLimit = allowedLimits.includes(limit) ? limit : 10;
     const safePage = page > 0 ? page : 1;
     const offset = (safePage - 1) * safeLimit;
-    const where = status && status !== "all" ? eq(invoices.status, status as any) : undefined;
+    const conditions = [];
+    if (status && status !== "all") conditions.push(eq(invoices.status, status as any));
+    if (q && q.trim() !== "") {
+      const search = `%${q.trim()}%`;
+      conditions.push(or(sql`CAST(${invoices.number} AS TEXT) ILIKE ${search}`, ilike(clients.name, search)));
+    }
+    const where = conditions.length ? and(...conditions) : undefined;
 
     const orderColumn =
       sortBy === "number" ? invoices.number :

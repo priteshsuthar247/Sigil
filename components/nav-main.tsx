@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   SidebarGroup,
@@ -13,7 +13,7 @@ import {
 type NavItem = {
   title: string;
   url: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   active?: boolean;
 };
 

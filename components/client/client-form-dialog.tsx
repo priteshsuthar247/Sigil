@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -54,16 +54,16 @@ function ClientFormBody({
   onClose: () => void;
 }) {
   const isEdit = Boolean(client);
-  const [saving, setSaving] = React.useState(false);
-  const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [values, setValues] = React.useState<ClientFormValues>({
+  const [values, setValues] = useState<ClientFormValues>({
     name: client?.name ?? "",
     email: client?.email ?? "",
     phone: client?.phone ?? "",
     address: client?.address ?? "",
   });
-  const [errors, setErrors] = React.useState<
+  const [errors, setErrors] = useState<
     Partial<Record<keyof ClientFormValues, string>>
   >({});
 

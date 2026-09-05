@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -23,7 +23,7 @@ export function SiteHeader({
   actions,
 }: {
   title?: string;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 }) {
   const pathname = usePathname();
   const heading = title ?? deriveTitle(pathname);
