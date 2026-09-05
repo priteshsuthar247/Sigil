@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { DownloadIcon } from "lucide-react";
 import { renderDocument } from "@formepdf/core/browser";
 import { InvoicePdf, buildInvoicePdfData } from "@/components/pdf/invoice-pdf";
 import { formatDate } from "@/lib/schemas";
@@ -62,12 +64,14 @@ export function PdfClientDownloadButton({ invoiceId, invoiceNumber }: { invoiceI
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       disabled={loading}
       onClick={handleDownload}
-      className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
     >
+      <DownloadIcon data-icon="inline-start" />
       {loading ? "Generating..." : "PDF"}
-    </button>
+    </Button>
   );
 }

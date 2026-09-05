@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { upsertCompanyProfileAction } from "@/app/dashboard/settings/business-profile/actions";
 
@@ -61,46 +61,48 @@ export function BusinessProfileForm({ initialData }: { initialData: any }) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="companyName">Company Name</Label>
-            <Input id="companyName" {...register("companyName")} />
-            {errors.companyName && <p className="text-sm text-destructive">{errors.companyName.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="companyAddress">Address</Label>
-            <Input id="companyAddress" {...register("companyAddress")} />
-            {errors.companyAddress && <p className="text-sm text-destructive">{errors.companyAddress.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="companyEmail">Email</Label>
-            <Input id="companyEmail" type="email" {...register("companyEmail")} />
-            {errors.companyEmail && <p className="text-sm text-destructive">{errors.companyEmail.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="companyPhone">Phone</Label>
-            <Input id="companyPhone" {...register("companyPhone")} />
-            {errors.companyPhone && <p className="text-sm text-destructive">{errors.companyPhone.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="paymentTerms">Payment Terms</Label>
-            <Input id="paymentTerms" {...register("paymentTerms")} />
-            {errors.paymentTerms && <p className="text-sm text-destructive">{errors.paymentTerms.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="gstin">GSTIN</Label>
-            <Input id="gstin" {...register("gstin")} />
-            {errors.gstin && <p className="text-sm text-destructive">{errors.gstin.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" {...register("notes")} />
-            {errors.notes && <p className="text-sm text-destructive">{errors.notes.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password</Label>
-            <PasswordInput id="currentPassword" {...register("currentPassword")} />
-            {errors.currentPassword && <p className="text-sm text-destructive">{errors.currentPassword.message}</p>}
-          </div>
+          <FieldGroup>
+            <Field data-invalid={!!errors.companyName}>
+              <FieldLabel htmlFor="companyName">Company Name</FieldLabel>
+              <Input id="companyName" {...register("companyName")} />
+              {errors.companyName && <FieldError>{errors.companyName.message}</FieldError>}
+            </Field>
+            <Field data-invalid={!!errors.companyAddress}>
+              <FieldLabel htmlFor="companyAddress">Address</FieldLabel>
+              <Input id="companyAddress" {...register("companyAddress")} />
+              {errors.companyAddress && <FieldError>{errors.companyAddress.message}</FieldError>}
+            </Field>
+            <Field data-invalid={!!errors.companyEmail}>
+              <FieldLabel htmlFor="companyEmail">Email</FieldLabel>
+              <Input id="companyEmail" type="email" {...register("companyEmail")} />
+              {errors.companyEmail && <FieldError>{errors.companyEmail.message}</FieldError>}
+            </Field>
+            <Field data-invalid={!!errors.companyPhone}>
+              <FieldLabel htmlFor="companyPhone">Phone</FieldLabel>
+              <Input id="companyPhone" {...register("companyPhone")} />
+              {errors.companyPhone && <FieldError>{errors.companyPhone.message}</FieldError>}
+            </Field>
+            <Field data-invalid={!!errors.paymentTerms}>
+              <FieldLabel htmlFor="paymentTerms">Payment Terms</FieldLabel>
+              <Input id="paymentTerms" {...register("paymentTerms")} />
+              {errors.paymentTerms && <FieldError>{errors.paymentTerms.message}</FieldError>}
+            </Field>
+            <Field data-invalid={!!errors.gstin}>
+              <FieldLabel htmlFor="gstin">GSTIN</FieldLabel>
+              <Input id="gstin" {...register("gstin")} />
+              {errors.gstin && <FieldError>{errors.gstin.message}</FieldError>}
+            </Field>
+            <Field data-invalid={!!errors.notes}>
+              <FieldLabel htmlFor="notes">Notes</FieldLabel>
+              <Textarea id="notes" {...register("notes")} />
+              {errors.notes && <FieldError>{errors.notes.message}</FieldError>}
+            </Field>
+            <Field data-invalid={!!errors.currentPassword}>
+              <FieldLabel htmlFor="currentPassword">Current Password</FieldLabel>
+              <PasswordInput id="currentPassword" {...register("currentPassword")} />
+              {errors.currentPassword && <FieldError>{errors.currentPassword.message}</FieldError>}
+            </Field>
+          </FieldGroup>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" disabled={pending}>{pending ? "Saving..." : "Save changes"}</Button>
         </form>

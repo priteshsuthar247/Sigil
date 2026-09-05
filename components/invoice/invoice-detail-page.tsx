@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronRightIcon } from "lucide-react";
+import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,13 +65,11 @@ export function InvoiceDetailPage({
 
   return (
     <>
-      <nav className="mb-4 text-sm text-muted-foreground flex items-center gap-2">
-        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-        <ChevronRightIcon className="size-4" />
-        <Link href="/dashboard/invoices" className="hover:underline">Invoices</Link>
-        <ChevronRightIcon className="size-4" />
-        <span className="text-foreground">#{invoice.number}</span>
-      </nav>
+      <AppBreadcrumb items={[
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Invoices", href: "/dashboard/invoices" },
+        { label: `#${invoice.number}` }
+      ]} className="mb-4" />
       <InvoiceDetail
         invoice={invoice}
         items={items}

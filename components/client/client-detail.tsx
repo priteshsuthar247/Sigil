@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronRightIcon } from "lucide-react";
+import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 import {
   Card,
   CardAction,
@@ -60,13 +59,11 @@ export function ClientDetail({
 
   return (
     <div className="flex flex-col gap-6">
-      <nav className="text-sm text-muted-foreground flex items-center gap-2">
-        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-        <ChevronRightIcon className="size-4" />
-        <Link href="/dashboard/clients" className="hover:underline">Clients</Link>
-        <ChevronRightIcon className="size-4" />
-        <span className="text-foreground">{client.name}</span>
-      </nav>
+      <AppBreadcrumb items={[
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Clients", href: "/dashboard/clients" },
+        { label: client.name }
+      ]} />
       <Card>
         <CardHeader>
           <CardTitle>{client.name}</CardTitle>

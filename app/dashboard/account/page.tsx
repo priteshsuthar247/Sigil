@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 import { AccountForm } from "@/components/account-form";
 import { getCurrentUser } from "@/server/users";
 
@@ -16,7 +17,14 @@ export default async function AccountPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">Account</h1>
+      <AppBreadcrumb items={[
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Account" }
+      ]} />
+      <div>
+        <h1 className="text-2xl font-bold">Account</h1>
+        <p className="text-sm text-muted-foreground">Manage your profile and password</p>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>

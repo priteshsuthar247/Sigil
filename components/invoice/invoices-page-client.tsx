@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -143,6 +144,10 @@ export function InvoicesPageClient({
 
   return (
     <div className="flex flex-col gap-4">
+      <AppBreadcrumb items={[
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Invoices" }
+      ]} />
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">

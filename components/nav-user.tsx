@@ -94,9 +94,6 @@ export function NavUser({
                 <CircleUserRoundIcon />
                 Account
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/dashboard/settings/business-profile")}>
-                Business Profile
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer" onClick={() => signOut({ callbackUrl: "/login" })}>
               <LogOutIcon />

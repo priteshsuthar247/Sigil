@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { updateCurrentUser } from "@/server/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { toast } from "sonner";
 
@@ -60,18 +60,20 @@ export function AccountForm({ user }: { user: User }) {
   if (!isEditing) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-2">
-          <div className="text-sm text-muted-foreground">Name</div>
-          <div className="text-base font-medium">{user.name}</div>
-        </div>
-        <div className="grid gap-2">
-          <div className="text-sm text-muted-foreground">Email</div>
-          <div className="text-base">{user.email}</div>
-        </div>
-        <div className="grid gap-2">
-          <div className="text-sm text-muted-foreground">Member since</div>
-          <div className="text-base">{createdAt}</div>
-        </div>
+        <dl className="grid gap-4 text-sm sm:grid-cols-2">
+          <div className="flex flex-col gap-1">
+            <dt className="text-muted-foreground">Name</dt>
+            <dd className="text-base font-medium">{user.name}</dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-muted-foreground">Email</dt>
+            <dd className="text-base">{user.email}</dd>
+          </div>
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <dt className="text-muted-foreground">Member since</dt>
+            <dd className="text-base">{createdAt}</dd>
+          </div>
+        </dl>
         <Button onClick={() => setIsEditing(true)}>Edit profile</Button>
       </div>
     );
@@ -84,20 +86,20 @@ export function AccountForm({ user }: { user: User }) {
           <FieldLabel>Email</FieldLabel>
           <Input value={user.email} disabled />
         </Field>
-        <Field>
+        <Field data-invalid={!!fieldErrors.name}>
           <FieldLabel htmlFor="name">Name</FieldLabel>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required aria-invalid={!!fieldErrors.name} />
-          {fieldErrors.name && <p className="text-sm text-red-600">{fieldErrors.name}</p>}
+          {fieldErrors.name && <FieldError>{fieldErrors.name}</FieldError>}
         </Field>
-        <Field>
+        <Field data-invalid={!!fieldErrors.currentPassword}>
           <FieldLabel htmlFor="currentPassword">Current Password</FieldLabel>
           <PasswordInput id="currentPassword" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder={password ? "Required to change password" : "Leave blank to keep password"} aria-invalid={!!fieldErrors.currentPassword} />
-          {fieldErrors.currentPassword && <p className="text-sm text-red-600">{fieldErrors.currentPassword}</p>}
+          {fieldErrors.currentPassword && <FieldError>{fieldErrors.currentPassword}</FieldError>}
         </Field>
-        <Field>
+        <Field data-invalid={!!fieldErrors.password}>
           <FieldLabel htmlFor="password">New Password</FieldLabel>
           <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to keep current" aria-invalid={!!fieldErrors.password} />
-          {fieldErrors.password && <p className="text-sm text-red-600">{fieldErrors.password}</p>}
+          {fieldErrors.password && <FieldError>{fieldErrors.password}</FieldError>}
         </Field>
         <Field className="flex gap-2">
           <Button type="submit" disabled={isPending}>
