@@ -3,12 +3,19 @@ import { db } from "@/db/drizzle";
 import { revalidatePath } from "next/cache";
 import { createClientSchema, clientUpdateSchema } from "@/db/validators";
 import { clients } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc, desc, sql } from "drizzle-orm";
 
-export async function getClients() {
+export async function getClients({ page = 1, limit = 10, sortBy = "name", sortDir = "asc" } = {}) {
   try {
-    const clientsList = await db.select().from(clients);
-    return { data: clientsList };
+    const offset = (page - 1) * limit;
+    const orderColumn = sortBy === "email" ? clients.email : sortBy === "createdAt" ? clients.createdAt : clients.name;
+    const order = sortDir === "asc" ? asc(orderColumn) : desc(orderColumn);
+
+    const [clientsList, [{ count }]] = await Promise.all([
+      db.select().from(clients).orderBy(order).limit(limit).offset(offset),
+      db.select({ count: sql<number>`count(*)` }).from(clients),
+    ]);
+    return { data: clientsList, total: Number(count) };
   } catch (error) {
     console.error("Error fetching clients:", error);
     return { error: "Failed to fetch clients" };

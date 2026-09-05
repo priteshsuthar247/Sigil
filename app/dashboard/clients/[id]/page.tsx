@@ -12,7 +12,7 @@ export default async function Page({
 
   const [clientResult, invoicesResult] = await Promise.all([
     getClientById(id),
-    getInvoices(),
+    getInvoices({ page: 1, limit: 1000 }),
   ]);
 
   const client = clientResult.data;

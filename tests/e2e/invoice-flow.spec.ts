@@ -13,7 +13,7 @@ test.describe("Invoice list", () => {
 
   test("shows client names for each invoice", async ({ page }) => {
     // Use .first() because same client can appear in multiple rows
-    await expect(page.getByText(/Acme|Globex/).first()).toBeVisible();
+    await expect(page.getByText(/Acme|Globex|Initech|Umbrella|Stark|Wayne/).first()).toBeVisible();
   });
 
   test("shows correct status badges", async ({ page }) => {
@@ -52,6 +52,7 @@ test.describe("Invoice detail", () => {
     await page.goto("/dashboard/invoices");
     // Click a Sent invoice
     await page.getByRole("button", { name: "Sent" }).click();
+    await page.waitForURL(/status=sent/);
     await page.getByText(/^\#\d+$/).first().click();
     await page.waitForURL(/\/dashboard\/invoices\//);
 

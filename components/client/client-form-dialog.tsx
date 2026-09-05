@@ -67,14 +67,6 @@ function ClientFormBody({
     Partial<Record<keyof ClientFormValues, string>>
   >({});
 
-  React.useEffect(() => {
-    const firstError = Object.keys(errors).find((k) => errors[k as keyof ClientFormValues]);
-    if (firstError) {
-      const el = document.getElementById(`client-${firstError}`);
-      el?.focus();
-    }
-  }, [errors]);
-
   const update = <K extends keyof ClientFormValues>(
     key: K,
     value: ClientFormValues[K],
@@ -187,9 +179,6 @@ function ClientFormBody({
               aria-invalid={Boolean(errors.address)}
               placeholder="100 Market St, San Francisco, CA"
             />
-            <div className="mt-1 text-xs text-muted-foreground">
-              {(values.address ?? "").length} / 255 characters
-            </div>
             {errors.address ? (
               <FieldError>{errors.address}</FieldError>
             ) : null}

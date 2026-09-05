@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,13 +37,23 @@ import type { Client, Invoice } from "@/lib/schemas";
 export function InvoicesPageClient({
   invoices,
   clients,
+  total = 0,
+  page = 1,
+  status = "all",
+  sortBy = "createdAt",
+  sortDir = "desc",
 }: {
   invoices: Invoice[];
   clients: Client[];
+  total?: number;
+  page?: number;
+  status?: string;
+  sortBy?: string;
+  sortDir?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [filter, setFilter] = useState<InvoiceFilter>("all");
+  const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Invoice | null>(null);
   const [markPaidTarget, setMarkPaidTarget] = useState<Invoice | null>(
@@ -52,11 +62,6 @@ export function InvoicesPageClient({
   const [deleting, setDeleting] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  const filtered: Invoice[] = useMemo(() => {
-    if (filter === "all") return invoices;
-    return invoices.filter((inv) => inv.status === filter);
-  }, [filter, invoices]);
 
   useEffect(() => {
     if (refreshing) setRefreshing(false);
@@ -103,40 +108,50 @@ export function InvoicesPageClient({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
-        <InvoiceFilters value={filter} onChange={setFilter} />
+        <InvoiceFilters value={status === "all" ? "all" : status as InvoiceFilter} onChange={(v) => { const params = new URLSearchParams(searchParams.toString()); if (v === "all") params.delete("status"); else params.set("status", v); params.set("page", "1"); router.replace(`${pathname}?${params.toString()}`); }} />
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           <PlusIcon data-icon="inline-start" />
           New Invoice
         </Button>
       </div>
-      {filtered.length === 0 ? (
+      {invoices.length === 0 ? (
         <Empty>
           <EmptyMedia variant="icon">
             <ReceiptIcon />
           </EmptyMedia>
           <EmptyHeader>
             <EmptyTitle>
-              {filter === "all"
+              {status === "all"
                 ? "No invoices yet"
-                : filter === "sent"
+                : status === "sent"
                 ? "No sent invoices"
                 : "No paid invoices"}
             </EmptyTitle>
             <EmptyDescription>
-              {filter === "all"
+              {status === "all"
                 ? "Create your first invoice to get started."
-                : `Switch to “All” or create a ${filter} invoice.`}
+                : `Switch to “All” or create a ${status} invoice.`}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
-        <InvoiceTable
-          invoices={filtered}
-          onEdit={handleEdit}
-          onMarkPaid={(inv) => setMarkPaidTarget(inv)}
-          onDelete={(inv) => setDeleteTarget(inv)}
-          isLoading={refreshing}
-        />
+        <div className="flex flex-col gap-4">
+          <InvoiceTable
+            invoices={invoices}
+            onEdit={handleEdit}
+            onMarkPaid={(inv) => setMarkPaidTarget(inv)}
+            onDelete={(inv) => setDeleteTarget(inv)}
+            isLoading={refreshing}
+          />
+          <div className="flex items-center justify-between text-sm">
+            <div>Showing {invoices.length} of {total} invoices</div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { const params = new URLSearchParams(searchParams.toString()); params.set("page", String(page - 1)); router.replace(`${pathname}?${params.toString()}`); }}>Previous</Button>
+              <span>Page {page} of {Math.max(1, Math.ceil(total / 10))}</span>
+              <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / 10)} onClick={() => { const params = new URLSearchParams(searchParams.toString()); params.set("page", String(page + 1)); router.replace(`${pathname}?${params.toString()}`); }}>Next</Button>
+            </div>
+          </div>
+        </div>
       )}
       <InvoiceFormDialog
         open={createOpen}

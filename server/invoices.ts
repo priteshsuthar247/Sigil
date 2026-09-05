@@ -6,24 +6,43 @@ import {
   updateInvoiceWithItemsSchema,
 } from "@/db/validators";
 import { invoices, invoiceItems, clients, invoiceStatus, users } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc, sql, and } from "drizzle-orm";
 
-export async function getInvoices() {
+export async function getInvoices({ page = 1, limit = 10, status, sortBy = "createdAt", sortDir = "desc" } = {} as { page?: number; limit?: number; status?: string; sortBy?: string; sortDir?: string }) {
   try {
-    const invoicesList = await db
-      .select({
-        id: invoices.id,
-        number: invoices.number,
-        clientId: invoices.clientId,
-        clientName: clients.name,
-        status: invoices.status,
-        totalAmount: invoices.totalAmount,
-        paidAt: invoices.paidAt,
-        createdAt: invoices.createdAt,
-      })
-      .from(invoices)
-      .innerJoin(clients, eq(invoices.clientId, clients.id));
-    return { data: invoicesList };
+    const offset = (page - 1) * limit;
+    const where = status && status !== "all" ? eq(invoices.status, status as any) : undefined;
+
+    const orderColumn =
+      sortBy === "number" ? invoices.number :
+      sortBy === "totalAmount" ? invoices.totalAmount :
+      sortBy === "status" ? invoices.status :
+      sortBy === "clientName" ? clients.name :
+      invoices.createdAt;
+
+    const order = sortDir === "asc" ? asc(orderColumn) : desc(orderColumn);
+
+    const [invoicesList, [{ count }]] = await Promise.all([
+      db
+        .select({
+          id: invoices.id,
+          number: invoices.number,
+          clientId: invoices.clientId,
+          clientName: clients.name,
+          status: invoices.status,
+          totalAmount: invoices.totalAmount,
+          paidAt: invoices.paidAt,
+          createdAt: invoices.createdAt,
+        })
+        .from(invoices)
+        .innerJoin(clients, eq(invoices.clientId, clients.id))
+        .where(where)
+        .orderBy(order)
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: sql<number>`count(*)` }).from(invoices).innerJoin(clients, eq(invoices.clientId, clients.id)).where(where),
+    ]);
+    return { data: invoicesList, total: Number(count) };
   } catch (error) {
     console.error("Error fetching invoices:", error);
     return { error: "Failed to fetch invoices" };
@@ -86,91 +105,43 @@ export async function createInvoiceWithItems(input: unknown) {
       0,
     );
 
-    const [lastInvoice] = await db
-      .select({ number: invoices.number })
-      .from(invoices)
-      .where(eq(invoices.userId, userId))
-      .orderBy(desc(invoices.number))
-      .limit(1);
-    const nextNumber = (lastInvoice?.number ?? 0) + 1;
+    const invoice = await db.transaction(async (tx) => {
+      const [lastInvoice] = await tx
+        .select({ number: invoices.number })
+        .from(invoices)
+        .where(eq(invoices.userId, userId))
+        .orderBy(desc(invoices.number))
+        .limit(1);
+      const nextNumber = (lastInvoice?.number ?? 0) + 1;
 
-    const [invoice] = await db
-      .insert(invoices)
-      .values({
-        number: nextNumber,
-        userId,
-        clientId: data.clientId,
-        status: data.status,
-        totalAmount: total,
-      })
-      .returning();
+      const [newInvoice] = await tx
+        .insert(invoices)
+        .values({
+          number: nextNumber,
+          userId,
+          clientId: data.clientId,
+          status: data.status,
+          totalAmount: total,
+        })
+        .returning();
 
-    await db.insert(invoiceItems).values(
-      data.items.map((item) => ({
-        invoiceId: invoice.id,
-        description: item.description,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-    );
+      await tx.insert(invoiceItems).values(
+        data.items.map((item) => ({
+          invoiceId: newInvoice.id,
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+      );
+
+      return newInvoice;
+    });
 
     revalidatePath("/dashboard/invoices");
     return { data: { invoice } };
   } catch (error) {
     console.error("Error creating invoice with items:", error);
     return { error: "Failed to create invoice with items" };
-  }
-}
-
-export async function duplicateInvoice(invoiceId: string) {
-  try {
-    const [existing] = await db
-      .select()
-      .from(invoices)
-      .where(eq(invoices.id, invoiceId))
-      .limit(1);
-    if (!existing) return { error: "Invoice not found" };
-
-    const items = await db
-      .select()
-      .from(invoiceItems)
-      .where(eq(invoiceItems.invoiceId, invoiceId));
-
-    const [lastInvoice] = await db
-      .select({ number: invoices.number })
-      .from(invoices)
-      .where(eq(invoices.userId, existing.userId))
-      .orderBy(desc(invoices.number))
-      .limit(1);
-    const nextNumber = (lastInvoice?.number ?? 0) + 1;
-
-    const [invoice] = await db
-      .insert(invoices)
-      .values({
-        number: nextNumber,
-        userId: existing.userId,
-        clientId: existing.clientId,
-        status: "sent",
-        totalAmount: existing.totalAmount,
-      })
-      .returning();
-
-    if (items.length) {
-      await db.insert(invoiceItems).values(
-        items.map((item) => ({
-          invoiceId: invoice.id,
-          description: item.description,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-      );
-    }
-
-    revalidatePath("/dashboard/invoices");
-    return { data: { invoice } };
-  } catch (error) {
-    console.error("Error duplicating invoice:", error);
-    return { error: "Failed to duplicate invoice" };
   }
 }
 
@@ -205,42 +176,47 @@ export async function updateInvoiceWithItems(
       invoicePatch.paidAt = data.status === "paid" ? new Date() : null;
     }
 
-    let workingInvoice = existing;
-    if (Object.keys(invoicePatch).length > 0) {
-      const [updated] = await db
-        .update(invoices)
-        .set(invoicePatch)
-        .where(eq(invoices.id, invoiceId))
-        .returning();
-      workingInvoice = updated;
-    }
+    const workingInvoice = await db.transaction(async (tx) => {
+      let updatedInvoice = existing;
 
-    if (data.items !== undefined) {
-      await db
-        .delete(invoiceItems)
-        .where(eq(invoiceItems.invoiceId, invoiceId));
+      if (Object.keys(invoicePatch).length > 0) {
+        const [updated] = await tx
+          .update(invoices)
+          .set(invoicePatch)
+          .where(eq(invoices.id, invoiceId))
+          .returning();
+        updatedInvoice = updated;
+      }
 
-      await db.insert(invoiceItems).values(
-        data.items.map((item) => ({
-          invoiceId,
-          description: item.description,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-      );
+      if (data.items !== undefined) {
+        await tx
+          .delete(invoiceItems)
+          .where(eq(invoiceItems.invoiceId, invoiceId));
 
-      const total = data.items.reduce(
-        (sum, i) => sum + i.quantity * i.price,
-        0,
-      );
+        await tx.insert(invoiceItems).values(
+          data.items.map((item) => ({
+            invoiceId,
+            description: item.description,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        );
 
-      const [finalInvoice] = await db
-        .update(invoices)
-        .set({ totalAmount: total })
-        .where(eq(invoices.id, invoiceId))
-        .returning();
-      workingInvoice = finalInvoice;
-    }
+        const total = data.items.reduce(
+          (sum, i) => sum + i.quantity * i.price,
+          0,
+        );
+
+        const [finalInvoice] = await tx
+          .update(invoices)
+          .set({ totalAmount: total })
+          .where(eq(invoices.id, invoiceId))
+          .returning();
+        updatedInvoice = finalInvoice;
+      }
+
+      return updatedInvoice;
+    });
 
     revalidatePath("/dashboard/invoices");
     return { data: { invoice: workingInvoice } };
