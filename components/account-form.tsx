@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateCurrentUser } from "@/server/users";
+import { updateCurrentUser, type UpdateUserResult } from "@/server/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -28,17 +28,17 @@ export function AccountForm({ user }: { user: User }) {
     setFieldErrors({});
     startTransition(async () => {
       const res = await updateCurrentUser({ name, currentPassword, password });
-      if (res.error) {
-        const err = res.error as any;
-        if (typeof err === "string") {
-          toast(err);
-        } else if (err?.formErrors) {
-          toast(err.formErrors[0] || "Failed to update profile");
+      if ('error' in res) {
+        if (typeof res.error === "string") {
+          toast(res.error);
+        } else if (res.error.formErrors?.length) {
+          toast(res.error.formErrors[0] || "Failed to update profile");
         } else {
           const errors: Record<string, string> = {};
-          if (err?.fieldErrors?.name) errors.name = err.fieldErrors.name[0];
-          if (err?.fieldErrors?.currentPassword) errors.currentPassword = err.fieldErrors.currentPassword[0];
-          if (err?.fieldErrors?.password) errors.password = err.fieldErrors.password[0];
+          const fieldErrors = res.error.fieldErrors;
+          if (fieldErrors?.name) errors.name = fieldErrors.name[0];
+          if (fieldErrors?.currentPassword) errors.currentPassword = fieldErrors.currentPassword[0];
+          if (fieldErrors?.password) errors.password = fieldErrors.password[0];
           if (Object.keys(errors).length > 0) {
             setFieldErrors(errors);
           } else {

@@ -49,7 +49,11 @@ export async function getCurrentUser() {
   return { data: user };
 }
 
-export async function updateCurrentUser(data: unknown) {
+export type UpdateUserResult = 
+  | { data: { id: string; name: string; email: string } }
+  | { error: string | { formErrors: string[]; fieldErrors?: Record<string, string[]> } };
+
+export async function updateCurrentUser(data: unknown): Promise<UpdateUserResult> {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "Unauthorized" };
