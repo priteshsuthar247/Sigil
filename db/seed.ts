@@ -1,5 +1,11 @@
 import { drizzle } from "drizzle-orm/neon-http";
-import { users, clients, invoices, invoiceItems, companyProfiles } from "./schema";
+import {
+  users,
+  clients,
+  invoices,
+  invoiceItems,
+  companyProfiles,
+} from "./schema";
 import bcrypt from "bcryptjs";
 
 async function seed() {
@@ -15,12 +21,12 @@ async function seed() {
   await db.delete(users);
 
   // Create user
-  const hashedPassword = await bcrypt.hash("password123", 10);
+  const hashedPassword = await bcrypt.hash("Password123", 10);
   const [user] = await db
     .insert(users)
     .values({
-      name: "John Doe",
-      email: "john@example.com",
+      name: "Pritesh Suthar",
+      email: "pritesh@example.com",
       password: hashedPassword,
     })
     .returning();
@@ -30,12 +36,14 @@ async function seed() {
   await db.insert(companyProfiles).values({
     userId: user.id,
     companyName: "It Works on My Machine Global Architecture",
-    companyAddress: "Room 404, The NullPointerException Building, Sector 0, Silicon Slums, 500081",
+    companyAddress:
+      "Room 404, The NullPointerException Building, Sector 0, Silicon Slums, 500081",
     companyEmail: "help@itworksonmymachineglobalarchitecture.com",
     companyPhone: "+1 (555) 404-0101",
     paymentTerms: "Net 30, Bank Transfer / UPI",
     gstin: "24AAAAA0000A1Z5",
-    notes: "Payment is due within 15 days of invoice issuance via wire transfer or UPI. Scope changes will be handled through a formal change request process and billed at our standard hourly rate. All deliverables come with a 30-day bug-fix warranty post-deployment.",
+    notes:
+      "Payment is due within 15 days of invoice issuance via wire transfer or UPI. Scope changes will be handled through a formal change request process and billed at our standard hourly rate. All deliverables come with a 30-day bug-fix warranty post-deployment.",
   });
   console.log(`Created company profile for user`);
 
@@ -119,7 +127,11 @@ async function seed() {
       totalAmount: 45000,
       paidDaysAgo: 12,
       items: [
-        { description: "Consulting services (January)", quantity: 1, price: 45000 },
+        {
+          description: "Consulting services (January)",
+          quantity: 1,
+          price: 45000,
+        },
       ],
     },
     {
@@ -128,7 +140,11 @@ async function seed() {
       status: "sent" as const,
       totalAmount: 210000,
       items: [
-        { description: "Cloud infrastructure setup", quantity: 1, price: 120000 },
+        {
+          description: "Cloud infrastructure setup",
+          quantity: 1,
+          price: 120000,
+        },
         { description: "Security audit", quantity: 1, price: 60000 },
         { description: "Monitoring setup", quantity: 1, price: 30000 },
       ],
@@ -141,7 +157,11 @@ async function seed() {
       paidDaysAgo: 2,
       items: [
         { description: "AI model training", quantity: 1, price: 200000 },
-        { description: "Data pipeline development", quantity: 1, price: 150000 },
+        {
+          description: "Data pipeline development",
+          quantity: 1,
+          price: 150000,
+        },
       ],
     },
     {
@@ -170,8 +190,16 @@ async function seed() {
       status: "sent" as const,
       totalAmount: 155000,
       items: [
-        { description: "E-commerce platform build", quantity: 1, price: 100000 },
-        { description: "Payment gateway integration", quantity: 1, price: 35000 },
+        {
+          description: "E-commerce platform build",
+          quantity: 1,
+          price: 100000,
+        },
+        {
+          description: "Payment gateway integration",
+          quantity: 1,
+          price: 35000,
+        },
         { description: "Testing & QA", quantity: 1, price: 20000 },
       ],
     },

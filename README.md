@@ -64,10 +64,8 @@ NEXTAUTH_SECRET=your-secret-here
 
 ## Credentials
 
-Default seed user created by `pnpm db:seed`:
-
-* Email: `john@example.com`
-* Password: `password123`
+* Email: `pritesh@example.com`
+* Password: `Password123`
 
 Password requirements for changes:
 * Minimum 8 characters
@@ -75,7 +73,8 @@ Password requirements for changes:
 * At least one lowercase letter
 * At least one digit
 
-Changing password requires current password verification and will force immediate logout with mandatory re-authentication.
+Changing password requires current password verification and will force
+immediate logout with mandatory re-authentication.
 
 ## Database Setup
 
