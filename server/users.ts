@@ -81,15 +81,19 @@ export async function updateCurrentUser(data: unknown): Promise<UpdateUserResult
       return { error: { formErrors: ["Current password is incorrect"] } };
     }
     // Hash new password
-    const updates: any = { name, password: await bcrypt.hash(password, 10) };
+    const updates: any = { 
+      name, 
+      password: await bcrypt.hash(password, 10),
+      passwordChangedAt: new Date()
+    };
     const [updated] = await db
       .update(users)
       .set(updates)
       .where(eq(users.id, session.user.id))
       .returning({ id: users.id, name: users.name, email: users.email });
     revalidatePath("/dashboard/account");
-    // Force re-authentication after password change by redirecting to sign out
-    redirect("/api/auth/signout?callbackUrl=/login");
+    // Mandatory logout after password change
+    redirect("/login");
     return { data: updated };
   }
 

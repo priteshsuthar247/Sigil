@@ -27,6 +27,7 @@ export const authConfig: NextAuthConfig = {
           id: user.id,
           name: user.name,
           email: user.email,
+          passwordChangedAt: user.passwordChangedAt,
         };
       },
     }),
@@ -42,6 +43,26 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.id = user.id;
         token.lastSeen = Date.now();
+        token.passwordChangedAt = (user as any).passwordChangedAt ? new Date((user as any).passwordChangedAt).getTime() : null;
+        token.iat = Math.floor(Date.now() / 1000);
+      }
+      if (token.id) {
+        // Invalidate session if password was changed after token issued
+        const [dbUser] = await db
+          .select({ passwordChangedAt: users.passwordChangedAt })
+          .from(users)
+          .where(eq(users.id, token.id as string))
+          .limit(1);
+        if (dbUser?.passwordChangedAt) {
+          const pwChanged = new Date(dbUser.passwordChangedAt).getTime();
+          const tokenPwChanged = token.passwordChangedAt ? Number(token.passwordChangedAt) : 0;
+          // If password changed after token was created, invalidate
+          if (pwChanged > tokenPwChanged) {
+            return null;
+          }
+          // Update token passwordChangedAt for future checks
+          token.passwordChangedAt = pwChanged;
+        }
       }
       if (token.lastSeen) {
         const lastSeen = typeof token.lastSeen === 'number' ? token.lastSeen : Number(token.lastSeen);
