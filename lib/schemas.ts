@@ -6,6 +6,10 @@ import { invoiceStatus } from "@/db/schema";
 export type { Client, InvoiceItem } from "@/db/schema";
 export type InvoiceStatus = (typeof invoiceStatus.enumValues)[number];
 
+export type ActionResult<T> =
+  | { data: T }
+  | { error: string | { formErrors: string[]; fieldErrors?: Record<string, string[]> } };
+
 export type Invoice = {
   id: string;
   number: number;

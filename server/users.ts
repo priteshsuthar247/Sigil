@@ -30,7 +30,7 @@ const updateUserSchema = z.object({
   path: ["currentPassword"],
 });
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<ActionResult<{ id: string; name: string; email: string; createdAt: Date }>> {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "Unauthorized" };
@@ -49,9 +49,9 @@ export async function getCurrentUser() {
   return { data: user };
 }
 
-export type UpdateUserResult = 
-  | { data: { id: string; name: string; email: string } }
-  | { error: string | { formErrors: string[]; fieldErrors?: Record<string, string[]> } };
+import type { ActionResult } from "@/lib/schemas";
+
+export type UpdateUserResult = ActionResult<{ id: string; name: string; email: string }>;
 
 export async function updateCurrentUser(data: unknown): Promise<UpdateUserResult> {
   const session = await auth();

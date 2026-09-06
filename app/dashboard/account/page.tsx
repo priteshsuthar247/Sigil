@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/server/users";
 
 export default async function AccountPage() {
   const result = await getCurrentUser();
-  if (result.error) {
+  if ('error' in result) {
     return (
       <div className="flex flex-col gap-6">
         <h2 className="text-2xl font-bold">Account</h2>
@@ -13,7 +13,7 @@ export default async function AccountPage() {
       </div>
     );
   }
-  const user = result.data!;
+  const user = result.data;
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
