@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { updateCurrentUser, type UpdateUserResult } from "@/server/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { toast } from "sonner";
+import { CheckIcon, XIcon } from "lucide-react";
 
 type User = {
   id: string;
@@ -22,6 +23,14 @@ export function AccountForm({ user }: { user: User }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const passwordChecks = useMemo(() => {
+    const hasMinLength = password.length >= 8;
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasDigit = /\d/.test(password);
+    return { hasMinLength, hasLower, hasUpper, hasDigit, isValid: hasMinLength && hasLower && hasUpper && hasDigit };
+  }, [password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +107,30 @@ export function AccountForm({ user }: { user: User }) {
         </Field>
         <Field data-invalid={!!fieldErrors.password}>
           <FieldLabel htmlFor="password">New Password</FieldLabel>
-          <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to keep current" aria-invalid={!!fieldErrors.password} />
+          <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to keep current" aria-invalid={!!fieldErrors.password} aria-describedby="password-help" />
+          {password && (
+            <div className="mt-2 space-y-1 text-xs text-muted-foreground" id="password-help">
+              <div className="flex items-center gap-1.5">
+                {passwordChecks.hasMinLength ? <CheckIcon className="size-3.5 text-green-600" /> : <XIcon className="size-3.5 text-red-600" />}
+                Minimum 8 characters
+              </div>
+              <div className="flex items-center gap-1.5">
+                {passwordChecks.hasLower ? <CheckIcon className="size-3.5 text-green-600" /> : <XIcon className="size-3.5 text-red-600" />}
+                Contains lowercase letter
+              </div>
+              <div className="flex items-center gap-1.5">
+                {passwordChecks.hasUpper ? <CheckIcon className="size-3.5 text-green-600" /> : <XIcon className="size-3.5 text-red-600" />}
+                Contains uppercase letter
+              </div>
+              <div className="flex items-center gap-1.5">
+                {passwordChecks.hasDigit ? <CheckIcon className="size-3.5 text-green-600" /> : <XIcon className="size-3.5 text-red-600" />}
+                Contains number
+              </div>
+            </div>
+          )}
+          {!password && (
+            <p className="mt-1 text-xs text-muted-foreground">Leave blank to keep current password. If set, must meet requirements above.</p>
+          )}
           {fieldErrors.password && <FieldError>{fieldErrors.password}</FieldError>}
         </Field>
         <Field className="flex gap-2">
