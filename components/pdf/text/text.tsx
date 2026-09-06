@@ -12,16 +12,16 @@ import { resolveColor } from "@/lib/resolve-color";
 import type { PDFComponentProps } from "@/components/pdf-components";
 import type { PdfcnTheme } from "@/components/pdf-themes";
 
-export type TextVariant = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl";
-export type TextWeight = "normal" | "medium" | "semibold" | "bold";
-export type TextDecoration = "underline" | "line-through" | "none";
+type TextVariant = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl";
+type TextWeight = "normal" | "medium" | "semibold" | "bold";
+type TextDecoration = "underline" | "line-through" | "none";
 
 /**
  * Body text with typography scale, alignment, and decoration options.
  * Props - `variant` | `align` | `color` | `weight` | `italic` | `decoration` | `transform` | `noMargin` | `children` | `style`
  * @see {@link TextProps}
  */
-export interface TextProps extends PDFComponentProps {
+interface TextProps extends PDFComponentProps {
   /**
    * @default 'base'
    */

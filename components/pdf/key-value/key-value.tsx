@@ -12,15 +12,15 @@ import { resolveColor } from "@/lib/resolve-color";
 import type { PDFComponentProps } from "@/components/pdf-components";
 import type { PdfcnTheme } from "@/components/pdf-themes";
 
-export type KeyValueDirection = "horizontal" | "vertical";
-export type KeyValueSize = "sm" | "md" | "lg";
+type KeyValueDirection = "horizontal" | "vertical";
+type KeyValueSize = "sm" | "md" | "lg";
 
 /**
  * A single key-value row with optional per-item color and style overrides.
  * Props - `key` | `value` | `valueColor` | `valueStyle` | `keyStyle`
  * @see {@link KeyValueEntry}
  */
-export interface KeyValueEntry {
+interface KeyValueEntry {
   key: string;
   value: string;
   valueColor?: string;
@@ -33,7 +33,7 @@ export interface KeyValueEntry {
  * Props - `items` | `direction` | `divided` | `size` | `labelFlex` | `labelColor` | `valueColor` | `boldValue` | `noWrap` | `dividerColor` | `dividerThickness` | `dividerMargin` | `style`
  * @see {@link KeyValueProps}
  */
-export interface KeyValueProps extends Omit<PDFComponentProps, "children"> {
+interface KeyValueProps extends Omit<PDFComponentProps, "children"> {
   items: KeyValueEntry[];
   /**
    * @default 'horizontal'

@@ -49,7 +49,7 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 
-export const features = tableFeatures({
+const features = tableFeatures({
   columnFilteringFeature,
   columnVisibilityFeature,
   rowPaginationFeature,

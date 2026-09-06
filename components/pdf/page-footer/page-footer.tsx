@@ -39,7 +39,7 @@ const wrapFixed = (
     </Fixed>
   );
 };
-export type PageFooterVariant =
+type PageFooterVariant =
   | "simple"
   | "centered"
   | "branded"
@@ -52,7 +52,7 @@ export type PageFooterVariant =
  * Props - `leftText` | `rightText` | `centerText` | `variant` | `background` | `textColor` | `marginTop` | `address` | `phone` | `email` | `website` | `fixed` | `sticky` | `pagePadding` | `noWrap` | `style`
  * @see {@link PageFooterProps}
  */
-export interface PageFooterProps extends Omit<PDFComponentProps, "children"> {
+interface PageFooterProps extends Omit<PDFComponentProps, "children"> {
   leftText?: string;
   rightText?: string;
   centerText?: string;

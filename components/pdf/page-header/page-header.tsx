@@ -22,7 +22,7 @@ const wrapFixed = (fixed: boolean | undefined, node: React.ReactElement) => {
   }
   return <Fixed position="header">{node}</Fixed>;
 };
-export type PageHeaderVariant =
+type PageHeaderVariant =
   | "simple"
   | "centered"
   | "minimal"
@@ -36,7 +36,7 @@ export type PageHeaderVariant =
  * Props - `title` | `subtitle` | `rightText` | `rightSubText` | `variant` | `background` | `titleColor` | `marginBottom` | `address` | `phone` | `email` | `logo` | `fixed` | `noWrap` | `style`
  * @see {@link PageHeaderProps}
  */
-export interface PageHeaderProps extends Omit<PDFComponentProps, "children"> {
+interface PageHeaderProps extends Omit<PDFComponentProps, "children"> {
   title: string;
   subtitle?: string;
   rightText?: string;

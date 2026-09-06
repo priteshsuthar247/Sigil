@@ -9,16 +9,16 @@ import { resolveColor } from "@/lib/resolve-color";
 import type { PDFComponentProps } from "@/components/pdf-components";
 import type { PdfcnTheme } from "@/components/pdf-themes";
 
-export type SectionSpacing = "none" | "sm" | "md" | "lg" | "xl";
-export type SectionPadding = "none" | "sm" | "md" | "lg";
-export type SectionVariant = "default" | "callout" | "highlight" | "card";
+type SectionSpacing = "none" | "sm" | "md" | "lg" | "xl";
+type SectionPadding = "none" | "sm" | "md" | "lg";
+type SectionVariant = "default" | "callout" | "highlight" | "card";
 
 /**
  * Layout container with spacing, padding, and visual style variants.
  * Props - `spacing` | `padding` | `background` | `border` | `variant` | `accentColor` | `noWrap` | `children` | `style`
  * @see {@link SectionProps}
  */
-export interface SectionProps extends PDFComponentProps {
+interface SectionProps extends PDFComponentProps {
   /**
    * @default 'md'
    */

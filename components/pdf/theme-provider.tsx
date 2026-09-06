@@ -8,7 +8,7 @@ export type PdfcnTheme = typeof professionalTheme;
 
 let serializedTheme = professionalTheme;
 
-export interface PdfcnThemeProviderProps {
+interface PdfcnThemeProviderProps {
   theme?: PdfcnTheme;
   children: ReactNode;
 }
