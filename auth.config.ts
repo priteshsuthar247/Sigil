@@ -33,13 +33,22 @@ export const authConfig: NextAuthConfig = {
   ],
   session: { 
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
     async jwt({ token, user }) {
+      const IDLE_LIMIT_MS = 8 * 60 * 60 * 1000; // 8 hours
       if (user) {
         token.id = user.id;
+        token.lastSeen = Date.now();
+      }
+      if (token.lastSeen) {
+        const lastSeen = typeof token.lastSeen === 'number' ? token.lastSeen : Number(token.lastSeen);
+        if (Date.now() - lastSeen > IDLE_LIMIT_MS) {
+          return null;
+        }
+        token.lastSeen = Date.now();
       }
       return token;
     },
