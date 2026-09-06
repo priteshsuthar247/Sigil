@@ -62,6 +62,21 @@ NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-here
 ```
 
+## Credentials
+
+Default seed user created by `pnpm db:seed`:
+
+* Email: `john@example.com`
+* Password: `password123`
+
+Password requirements for changes:
+* Minimum 8 characters
+* At least one uppercase letter
+* At least one lowercase letter
+* At least one digit
+
+Changing password requires current password verification and will force immediate logout with mandatory re-authentication.
+
 ## Database Setup
 
 ```bash
