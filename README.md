@@ -1,13 +1,19 @@
-# Invoicing
+# Sigil
 
-A production-ready single-user invoicing workspace built with Next.js 16 App Router. Manage clients, invoices and company profiles, generate client-side PDFs in INR, with NextAuth JWT sessions and Drizzle PostgreSQL.
+A production-ready single-user invoicing workspace built with Next.js 16 App
+Router. Manage clients, invoices and company profiles, generate client-side PDFs
+in INR, with NextAuth JWT sessions and Drizzle PostgreSQL.
 
 ## Overview
 
-This application provides a complete invoicing workflow for a single authenticated user. Data is isolated per user via `userId` foreign keys across `clients`, `invoices`, `invoice_items` and `company_profiles`. Invoices are rendered to PDF client-side using Forme / pdfcn and downloaded locally. No PDFs are stored on the server.
+This application provides a complete invoicing workflow for a single
+authenticated user. Data is isolated per user via `userId` foreign keys across
+`clients`, `invoices`, `invoice_items` and `company_profiles`. Invoices are
+rendered to PDF client-side using Forme / pdfcn and downloaded locally. No PDFs
+are stored on the server.
 
-> [!NOTE]
-> Designed for single-user operation. Currency is fixed to INR with whole rupee formatting.
+> [!NOTE] Designed for single-user operation. Currency is fixed to INR with
+> whole rupee formatting.
 
 ## Features
 
@@ -31,14 +37,14 @@ This application provides a complete invoicing workflow for a single authenticat
 - **Auth**: next-auth 5.0.0-beta.32, bcryptjs
 - **Database**: Drizzle ORM 1.0.0-rc.4, drizzle-kit, drizzle-zod, PostgreSQL
 - **Forms**: react-hook-form 7.87.0, @hookform/resolvers, zod 4.5.4
-- **UI**: @base-ui/react 1.7.0, shadcn 4.19.1, class-variance-authority, tailwind-merge, tw-animate-css, lucide-react, sonner
+- **UI**: @base-ui/react 1.7.0, shadcn 4.19.1, class-variance-authority,
+  tailwind-merge, tw-animate-css, lucide-react, sonner
 - **PDF**: @formepdf/core 0.17.0, @formepdf/react 0.17.0
 - **Package Manager**: pnpm 11.25.0
 
 ## Getting Started
 
-> [!IMPORTANT]
-> Set `NEXTAUTH_SECRET` to a secure random string for production.
+> [!IMPORTANT] Set `NEXTAUTH_SECRET` to a secure random string for production.
 
 ```bash
 pnpm install
@@ -105,13 +111,7 @@ Migrations are in `/migrations`.
   pdf-themes/
 ```
 
-## Key Implementation Notes
 
-- **Session**: `auth.config.ts` configures JWT with 7 day maxAge and 8 hour idle invalidation. `token.lastSeen` is refreshed on each request.
-- **Currency**: INR whole rupees. `formatCurrency` uses `en-IN` locale with `maximumFractionDigits: 0`.
-- **PDF**: Generation is client-side only. Renderer is Forme, theme is `invoice-minimal` with `theme-minimal`.
-- **Responsive**: Tables use `hidden md:block`. Mobile views use stacked Cards `block md:hidden`.
-- **Type safety**: `lib/schemas.ts` defines `ActionResult<T>` and form schemas extending `db/validators.ts`. Duplicate invoice item schemas were consolidated.
 
 ## Development
 
@@ -136,7 +136,7 @@ npx tsc --noEmit --skipLibCheck
 
 ![Invoice PDF preview](./docs/screenshots/invoice-pdf.png)
 
-Place screenshots in `docs/screenshots/` after running the app locally.
+
 
 ## Resources
 

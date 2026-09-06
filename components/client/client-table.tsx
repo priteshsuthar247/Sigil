@@ -132,7 +132,7 @@ const emptyState = (
     <EmptyHeader>
       <EmptyTitle>No clients yet</EmptyTitle>
       <EmptyDescription>
-        Add your first client to start invoicing.
+        Add your first client to start invoicing with Sigil.
       </EmptyDescription>
     </EmptyHeader>
   </Empty>

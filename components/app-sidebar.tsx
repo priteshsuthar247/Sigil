@@ -71,7 +71,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
               render={<Link href="/dashboard" onClick={() => setOpenMobile(false)} />}
             >
               <CommandIcon className="size-5!" />
-              <span className="text-base font-semibold">Invoicing</span>
+              <span className="text-base font-semibold">Sigil</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

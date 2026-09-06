@@ -17,10 +17,10 @@ export default function Page() {
           <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <ReceiptIcon />
           </div>
-          <CardTitle>Invoicing</CardTitle>
+          <CardTitle>Sigil</CardTitle>
           <CardDescription>
             A simple invoicing workspace — manage clients, send invoices, and
-            track payments.
+            track payments with Sigil.
           </CardDescription>
         </CardHeader>
         <CardContent>

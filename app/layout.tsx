@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Invoicing",
-  description: "Simple invoicing workspace",
+  title: "Sigil",
+  description: "Sigil – invoicing workspace",
 };
 
 export default function RootLayout({
