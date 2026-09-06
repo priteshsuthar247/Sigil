@@ -53,15 +53,14 @@ export const authConfig: NextAuthConfig = {
           .from(users)
           .where(eq(users.id, token.id as string))
           .limit(1);
-        if (dbUser?.passwordChangedAt) {
-          const pwChanged = new Date(dbUser.passwordChangedAt).getTime();
-          const tokenPwChanged = token.passwordChangedAt ? Number(token.passwordChangedAt) : 0;
-          // If password changed after token was created, invalidate
-          if (pwChanged > tokenPwChanged) {
+        if (dbUser?.passwordChangedAt && token.iat) {
+          const pwChangedSec = Math.floor(new Date(dbUser.passwordChangedAt).getTime() / 1000);
+          // If password was changed after token was issued, invalidate
+          if (pwChangedSec > token.iat) {
             return null;
           }
-          // Update token passwordChangedAt for future checks
-          token.passwordChangedAt = pwChanged;
+          // Keep token in sync with latest passwordChangedAt
+          token.passwordChangedAt = new Date(dbUser.passwordChangedAt).getTime();
         }
       }
       if (token.lastSeen) {
