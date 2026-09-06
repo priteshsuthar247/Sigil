@@ -33,10 +33,6 @@ export const createInvoiceWithItemsSchema = z.object({
     .min(1, "At least one item is required"),
 });
 
-export type CreateInvoiceWithItemsInput = z.infer<
-  typeof createInvoiceWithItemsSchema
->;
-
 export const updateInvoiceWithItemsSchema = z.object({
   clientId: z.string().uuid("Invalid client ID").optional(),
   status: z.enum(invoiceStatus.enumValues).optional(),
@@ -54,18 +50,3 @@ export const updateInvoiceWithItemsSchema = z.object({
     .min(1, "At least one item is required")
     .optional(),
 });
-
-export type UpdateInvoiceWithItemsInput = z.infer<
-  typeof updateInvoiceWithItemsSchema
->;
-
-const invoiceItemInsertSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  quantity: z.number().int().min(1, "Quantity must be at least 1"),
-  price: z
-    .number()
-    .int()
-    .nonnegative("Price must be a non-negative integer"),
-});
-
-export { invoiceItemInsertSchema as invoiceItemFormSchema };
