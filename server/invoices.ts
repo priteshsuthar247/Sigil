@@ -5,8 +5,8 @@ import {
   createInvoiceWithItemsSchema,
   updateInvoiceWithItemsSchema,
 } from "@/db/validators";
-import { invoices, invoiceItems, clients, invoiceStatus, users } from "@/db/schema";
-import { eq, desc, asc, sql, and, or, ilike } from "drizzle-orm";
+import { invoices, invoiceItems, clients, invoiceStatus } from "@/db/schema";
+import { eq, desc, asc, sql, and } from "drizzle-orm";
 import { auth } from "@/auth";
 
 export async function getInvoices({ page = 1, limit = 10, status, sortBy = "createdAt", sortDir = "desc", q } = {} as { page?: number; limit?: number; status?: string; sortBy?: string; sortDir?: string; q?: string }) {

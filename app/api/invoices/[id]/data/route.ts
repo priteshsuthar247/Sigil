@@ -5,7 +5,7 @@ import { invoices, invoiceItems, clients, companyProfiles } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();

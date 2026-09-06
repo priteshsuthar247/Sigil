@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/empty";
 import { EllipsisVerticalIcon, UsersIcon } from "lucide-react";
 import { formatDate, type Client } from "@/lib/schemas";
-import type { ColumnDef } from "@tanstack/react-table";
 import { ClientMobileCards } from "./client-mobile-cards";
 
 const columnHelper = createTableColumnHelper<Client>();

@@ -271,7 +271,7 @@ const applyTextColor = (
 };
 
 const renderBranded = (
-  styles: Styles,
+  _styles: Styles,
   containerStyles: Style[],
   leftStyle: Style[],
   rightStyle: Style[],
@@ -286,7 +286,7 @@ const renderBranded = (
 );
 
 const renderCentered = (
-  styles: Styles,
+  _styles: Styles,
   containerStyles: Style[],
   textStyle: Style[],
   leftText: string | undefined,
@@ -369,7 +369,7 @@ const renderDetailed = (
 );
 
 const renderMinimal = (
-  styles: Styles,
+  _styles: Styles,
   containerStyles: Style[],
   leftStyle: Style[],
   rightStyle: Style[],
@@ -384,7 +384,7 @@ const renderMinimal = (
 );
 
 const renderSimple = (
-  styles: Styles,
+  _styles: Styles,
   containerStyles: Style[],
   leftStyle: Style[],
   centerStyle: Style[],
